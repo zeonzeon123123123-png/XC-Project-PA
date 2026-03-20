@@ -98,6 +98,7 @@
                 top: 100px;
                 bottom: 20px;
                 width: 400px;
+                min-width: 50px;
                 background: white;
                 border-radius: 16px;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.15);
@@ -112,10 +113,10 @@
             
             panel.innerHTML = `
                 <!-- 头部 -->
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; flex-shrink: 0;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
+                <div id="aiPanelHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; flex-shrink: 0; min-width: 50px;">
+                    <div id="aiHeaderContent" style="display: flex; align-items: center; gap: 12px;">
                         <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">🤖</div>
-                        <div>
+                        <div id="aiHeaderText">
                             <div style="font-size: 15px; font-weight: 600;">AI 智能助手</div>
                             <div style="font-size: 11px; opacity: 0.9; display: flex; align-items: center; gap: 4px;">
                                 <span style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; display: inline-block;"></span>
@@ -262,20 +263,26 @@
         // 切换面板展开/收起
         togglePanel() {
             const content = document.getElementById('aiPanelContent');
+            const headerContent = document.getElementById('aiHeaderContent');
+            const headerText = document.getElementById('aiHeaderText');
             const panel = document.getElementById('aiAssistantV3Panel');
             const toggleBtn = document.getElementById('aiToggleBtn');
             
             if (this.isExpanded) {
-                // 收起
+                // 收起 - 隐藏内容和文字，只保留头部和按钮
                 content.style.display = 'none';
+                if (headerText) headerText.style.display = 'none';
                 panel.style.width = '50px';
-                toggleBtn.textContent = '🗖';
+                toggleBtn.textContent = '➡️';
+                toggleBtn.title = '展开';
                 this.isExpanded = false;
             } else {
                 // 展开
                 content.style.display = 'block';
+                if (headerText) headerText.style.display = 'block';
                 panel.style.width = '400px';
                 toggleBtn.textContent = '🗖';
+                toggleBtn.title = '收起';
                 this.isExpanded = true;
             }
         }
