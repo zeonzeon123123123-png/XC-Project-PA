@@ -358,24 +358,7 @@
         
         // 文档管理
         openDocManager() {
-            const docs = [];
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('doc_') || key.startsWith('draft_')) {
-                    try {
-                        const data = JSON.parse(localStorage.getItem(key));
-                        docs.push({ key, name: data.projectName, type: key.startsWith('doc_') ? '已提交' : '草稿', date: data.submittedAt || data.savedAt });
-                    } catch (e) {}
-                }
-            }
-            
-            let docList = '📁 文档列表：\n\n';
-            if (docs.length === 0) docList += '暂无文档\n';
-            else docs.forEach((doc, i) => {
-                docList += `${i + 1}. ${doc.name} (${doc.type})\n   ${new Date(doc.date).toLocaleString('zh-CN')}\n\n`;
-            });
-            
-            alert(docList);
+            window.location.href = 'doc-manager.html';
         }
         
         // 发送消息
