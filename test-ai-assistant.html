@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 助手测试页面</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f6f7;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .test-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .status-label {
+            font-weight: 500;
+            color: #555;
+        }
+        .status-value {
+            font-family: 'Monaco', 'Consolas', monospace;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            font-size: 13px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .status-badge.success { background: #22c55e; color: white; }
+        .status-badge.error { background: #ef4444; color: white; }
+        .status-badge.warning { background: #f59e0b; color: white; }
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .log-output {
+            background: #1e293b;
+            color: #22c55e;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        .form-test {
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI 助手测试页面</h1>
+        
+        <!-- 配置状态 -->
+        <div class="test-section">
+            <h2>📋 配置状态</h2>
+            <div class="status-item">
+                <span class="status-label">OpenClaw 配置加载器</span>
+                <span id="configLoaderStatus"><span class="status-badge warning">检测中...</span></span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">OpenClaw 配置</span>
+                <span id="openClawConfigStatus"><span class="status-badge warning">检测中...</span></span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">API 服务</span>
+                <span id="apiServiceStatus"><span class="status-badge warning">检测中...</span></span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">AI 助手</span>
+                <span id="assistantStatus"><span class="status-badge warning">检测中...</span></span>
+            </div>
+        </div>
+        
+        <!-- API 配置信息 -->
+        <div class="test-section">
+            <h2>🔑 API 配置信息</h2>
+            <div class="status-item">
+                <span class="status-label">Base URL</span>
+                <span id="baseUrlDisplay" class="status-value">加载中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">API Key</span>
+                <span id="apiKeyDisplay" class="status-value">加载中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">当前模型</span>
+                <span id="modelDisplay" class="status-value">加载中...</span>
+            </div>
+        </div>
+        
+        <!-- 测试表单 -->
+        <div class="test-section">
+            <h2>📝 测试表单</h2>
+            <div class="form-test">
+                <div class="form-group">
+                    <label>项目名称</label>
+                    <input type="text" id="testProjectName" placeholder="输入项目名称，例如：智能摄像头系统">
+                </div>
+                <div class="form-group">
+                    <label>项目类型</label>
+                    <select id="testProjectType" style="width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:8px;">
+                        <option value="">请选择</option>
+                        <option value="新产品开发">新产品开发</option>
+                        <option value="技术预研">技术预研</option>
+                        <option value="AI 算法">AI 算法</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>技术目标</label>
+                    <textarea id="testTechGoal" rows="4" placeholder="点击这里，AI 助手会提供建议"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 控制台日志 -->
+        <div class="test-section">
+            <h2>📊 控制台日志</h2>
+            <div class="log-output" id="logOutput">等待初始化...</div>
+            <button class="btn" onclick="clearLogs()" style="margin-top:10px;">🗑️ 清空日志</button>
+            <button class="btn" onclick="testAIChat()" style="margin-top:10px;">💬 测试 AI 对话</button>
+            <button class="btn" onclick="showAssistantPanel()" style="margin-top:10px;">🤖 显示 AI 助手面板</button>
+        </div>
+    </div>
+
+    <!-- 加载脚本 -->
+    <script src="js/openclaw-config-loader.js"></script>
+    <script src="js/ai-api-service-simple.js"></script>
+    <script src="js/ai-form-assistant.js"></script>
+    
+    <script>
+        // 日志输出
+        const logOutput = document.getElementById('logOutput');
+        let logs = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+            logs.push(`${timestamp} ${icon} ${message}`);
+            logOutput.textContent = logs.join('\n');
+            logOutput.scrollTop = logOutput.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLogs() {
+            logs = [];
+            logOutput.textContent = '日志已清空';
+        }
+        
+        // 页面加载时测试
+        window.addEventListener('DOMContentLoaded', async () => {
+            log('=== AI 助手测试开始 ===');
+            
+            // 1. 测试配置加载器
+            try {
+                if (typeof OpenClawConfigLoader !== 'undefined') {
+                    log('OpenClaw 配置加载器已加载', 'success');
+                    document.getElementById('configLoaderStatus').innerHTML = '<span class="status-badge success">已加载</span>';
+                    
+                    // 加载配置
+                    const config = await openClawConfig.load();
+                    if (config) {
+                        log('OpenClaw 配置加载成功', 'success');
+                        document.getElementById('openClawConfigStatus').innerHTML = '<span class="status-badge success">成功</span>';
+                        
+                        // 显示配置信息
+                        const proxyConfig = await openClawConfig.getProxyConfig();
+                        if (proxyConfig) {
+                            document.getElementById('baseUrlDisplay').textContent = proxyConfig.baseUrl;
+                            document.getElementById('apiKeyDisplay').textContent = 
+                                proxyConfig.apiKey.substring(0, 15) + '...';
+                            
+                            if (proxyConfig.models && proxyConfig.models.length > 0) {
+                                const qwenModel = proxyConfig.models.find(m => m.id.includes('qwen'));
+                                const modelId = qwenModel ? qwenModel.id : proxyConfig.models[0].id;
+                                document.getElementById('modelDisplay').textContent = modelId;
+                                log(`使用模型：${modelId}`, 'success');
+                            }
+                        }
+                    } else {
+                        log('OpenClaw 配置加载失败', 'error');
+                        document.getElementById('openClawConfigStatus').innerHTML = '<span class="status-badge error">失败</span>';
+                    }
+                } else {
+                    log('OpenClaw 配置加载器未找到', 'error');
+                    document.getElementById('configLoaderStatus').innerHTML = '<span class="status-badge error">未找到</span>';
+                }
+            } catch (e) {
+                log(`配置加载错误：${e.message}`, 'error');
+                document.getElementById('openClawConfigStatus').innerHTML = '<span class="status-badge error">错误</span>';
+            }
+            
+            // 2. 测试 API 服务
+            try {
+                if (typeof AIAPIService !== 'undefined') {
+                    log('AI API Service 已加载', 'success');
+                    document.getElementById('apiServiceStatus').innerHTML = '<span class="status-badge success">已加载</span>';
+                    
+                    // 初始化 API 服务
+                    aiAPIService = new AIAPIService();
+                    const success = await aiAPIService.init();
+                    
+                    if (success) {
+                        log('AI API Service 初始化成功', 'success');
+                        const status = aiAPIService.getStatus();
+                        log(`模型：${status.model}`, 'success');
+                        log(`API: ${status.baseUrl}`, 'success');
+                        document.getElementById('apiServiceStatus').innerHTML = '<span class="status-badge success">就绪</span>';
+                    } else {
+                        log('AI API Service 初始化失败', 'error');
+                        document.getElementById('apiServiceStatus').innerHTML = '<span class="status-badge error">失败</span>';
+                    }
+                } else {
+                    log('AI API Service 未找到', 'error');
+                    document.getElementById('apiServiceStatus').innerHTML = '<span class="status-badge error">未找到</span>';
+                }
+            } catch (e) {
+                log(`API 服务错误：${e.message}`, 'error');
+                document.getElementById('apiServiceStatus').innerHTML = '<span class="status-badge error">错误</span>';
+            }
+            
+            // 3. 测试 AI 助手
+            try {
+                if (typeof aiAssistant !== 'undefined' && aiAssistant) {
+                    log('AI 助手已初始化', 'success');
+                    document.getElementById('assistantStatus').innerHTML = '<span class="status-badge success">就绪</span>';
+                } else {
+                    log('AI 助手未初始化，等待DOMContentLoaded...', 'warning');
+                    // AI 助手会自动初始化
+                }
+            } catch (e) {
+                log(`AI 助手错误：${e.message}`, 'error');
+                document.getElementById('assistantStatus').innerHTML = '<span class="status-badge error">错误</span>';
+            }
+            
+            log('=== 测试完成 ===', 'success');
+        });
+        
+        // 测试 AI 对话
+        async function testAIChat() {
+            log('开始测试 AI 对话...');
+            
+            if (!aiAPIService || !aiAPIService.initialized) {
+                log('AI 服务未初始化', 'error');
+                alert('AI 服务未初始化，请检查配置');
+                return;
+            }
+            
+            const question = '你好，请告诉我你是什么模型？你能帮我做什么？';
+            log(`发送问题：${question}`);
+            
+            const response = await aiAPIService.chat(question);
+            
+            if (response.success) {
+                log('AI 回复：\n' + response.answer, 'success');
+                alert('AI 回复成功！请查看日志。');
+            } else {
+                log(`AI 回复失败：${response.error}`, 'error');
+                alert(`AI 回复失败：${response.error}`);
+            }
+        }
+        
+        // 显示 AI 助手面板
+        function showAssistantPanel() {
+            if (typeof aiAssistant !== 'undefined' && aiAssistant) {
+                aiAssistant.openPanel();
+                log('AI 助手面板已显示', 'success');
+            } else {
+                log('AI 助手未初始化', 'error');
+                alert('AI 助手未初始化');
+            }
+        }
+    </script>
+</body>
+</html>
