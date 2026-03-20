@@ -3,300 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>项目文档智能助手 - 文档选择</title>
+    <title>XC-Project-PA - 项目文档智能助手</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f5f6f7;
             min-height: 100vh;
-            padding: 20px;
         }
-        .header {
-            max-width: 1200px;
-            margin: 0 auto 30px;
-            text-align: center;
-            color: white;
+        
+        /* 顶部导航栏 */
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0 20px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
-        .header h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-        .header p {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-        .container {
-            max-width: 1200px;
+        .navbar-content {
+            max-width: 1400px;
             margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
         }
-        .section-title {
-            font-size: 20px;
-            color: white;
-            margin-bottom: 20px;
+        .navbar-brand {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            text-decoration: none;
         }
+        .navbar-brand-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .navbar-nav {
+            display: flex;
+            gap: 8px;
+        }
+        .nav-item {
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.1);
+        }
+        .nav-item:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        .nav-item.active {
+            background: white;
+            color: #667eea;
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* 页面标题 */
+        .page-header {
+            margin-bottom: 40px;
+        }
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .page-subtitle {
+            font-size: 16px;
+            color: #666;
+        }
+        
+        /* 文档网格 */
         .doc-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
             margin-bottom: 40px;
         }
         .doc-card {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
+            border-radius: 16px;
+            padding: 28px;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         .doc-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            transform: translateY(-6px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+            border-color: #667eea;
         }
         .doc-icon {
             width: 60px;
             height: 60px;
-            border-radius: 12px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 28px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
         .doc-card h3 {
             font-size: 18px;
+            font-weight: 600;
             color: #333;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         .doc-card p {
-            font-size: 14px;
+            font-size: 13px;
             color: #666;
-            margin-bottom: 16px;
-            line-height: 1.5;
+            line-height: 1.6;
+            margin-bottom: 20px;
         }
         .doc-meta {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding-top: 16px;
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid #f0f0f0;
         }
         .doc-tag {
             padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #e3f2fd;
+            color: #1976d2;
         }
-        .doc-tag.core { background: #e3f2fd; color: #1976d2; }
-        .doc-tag.common { background: #fff3e0; color: #f57c00; }
-        .doc-tag.optional { background: #f5f6f7; color: #666; }
         .doc-action {
-            font-size: 14px;
+            font-size: 13px;
             color: #667eea;
             font-weight: 600;
+        }
+        
+        /* 分区标题 */
+        .section-header {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e0e0e0;
         }
-        .doc-action:hover {
-            color: #764ba2;
+        .section-icon {
+            font-size: 28px;
         }
-        .stats-bar {
-            background: rgba(255,255,255,0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-        }
-        .stat-item {
-            text-align: center;
-            color: white;
-        }
-        .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-        .stat-label {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        .search-box {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            gap: 10px;
-        }
-        .search-box input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        .search-box input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .search-box button {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
+        .section-title {
+            font-size: 22px;
             font-weight: 600;
-            cursor: pointer;
+            color: #333;
+        }
+        
+        /* 页脚 */
+        .footer {
+            background: white;
+            padding: 30px 20px;
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 60px;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
-            <div>
-                <h1>📋 项目文档智能助手</h1>
-                <p>选择要创建的文档类型，智能助手将协助您完成填写</p>
-                <div id="aiStatus" style="margin-top: 10px; font-size: 13px; opacity: 0.9;">
-                    <span style="display: inline-block; width: 8px; height: 8px; background: #4caf50; border-radius: 50%; margin-right: 6px;"></span>
-                    AI 助手已就绪（glm-5-fp8）
-                </div>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <a href="test-api.html" style="padding: 10px 20px; background: rgba(255,255,255,0.1); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🔌 测试 API</a>
-                <a href="settings.html" style="padding: 10px 20px; background: rgba(255,255,255,0.2); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">⚙️ 设置</a>
+    <!-- 顶部导航栏 -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand">
+                <div class="navbar-brand-icon">📋</div>
+                <span>XC-Project-PA</span>
+            </a>
+            <div class="navbar-nav">
+                <a href="index.html" class="nav-item active">📄 项目文档</a>
+                <a href="doc-manager.html" class="nav-item">📁 文档管理中心</a>
+                <a href="settings.html" class="nav-item">⚙️ 设置</a>
             </div>
         </div>
-    </div>
-
-    <div class="container">
-        <!-- 搜索框 -->
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="搜索文档模板，例如：立项书、可行性报告..." onkeyup="searchDocs()">
-            <button onclick="searchDocs()">🔍 搜索</button>
+    </nav>
+    
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">项目文档智能助手</h1>
+            <p class="page-subtitle">选择文档类型开始填写，AI 助手将为您提供智能建议</p>
         </div>
-
-        <!-- 核心文档 -->
-        <div class="section-title">
-            <span>⭐</span> 核心文档（立项阶段）
+        
+        <!-- 项目文档区域 -->
+        <div class="section-header">
+            <span class="section-icon">📋</span>
+            <h2 class="section-title">项目文档</h2>
         </div>
+        
         <div class="doc-grid">
-            <!-- 文档管理入口 -->
-            <div class="doc-card" onclick="window.location.href='doc-manager.html'" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                <div class="doc-icon" style="background: rgba(255,255,255,0.2);">📁</div>
-                <h3>文档管理中心</h3>
-                <p>查看所有草稿和已提交文档</p>
-                <div class="doc-meta">
-                    <span class="doc-tag" style="background: rgba(255,255,255,0.3); color: white;">管理</span>
-                    <span class="doc-action">进入 →</span>
-                </div>
-            </div>
-            
+            <!-- 研发立项书 -->
             <div class="doc-card" onclick="openDoc('立项书')">
                 <div class="doc-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">📋</div>
                 <h3>研发立项书</h3>
-                <p>项目启动申请文档，包含项目目标、资源需求、风险评估等核心信息</p>
+                <p>项目启动申请文档，包含项目基本信息、目标、资源需求、风险评估等</p>
                 <div class="doc-meta">
-                    <span class="doc-tag core">核心</span>
+                    <span class="doc-tag">核心文档</span>
                     <span class="doc-action">创建文档 →</span>
                 </div>
             </div>
-
+            
+            <!-- 可行性报告 -->
             <div class="doc-card" onclick="openDoc('可行性报告')">
-                <div class="doc-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">📊</div>
+                <div class="doc-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">📊</div>
                 <h3>可行性报告</h3>
-                <p>技术可行性、市场可行性、资源可行性分析，评估项目是否值得投入</p>
+                <p>技术/市场/资源可行性分析，评估项目是否值得投入</p>
                 <div class="doc-meta">
-                    <span class="doc-tag core">核心</span>
+                    <span class="doc-tag">分析文档</span>
                     <span class="doc-action">创建文档 →</span>
                 </div>
             </div>
-
+            
+            <!-- 项目章程 -->
             <div class="doc-card" onclick="openDoc('项目章程')">
-                <div class="doc-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">📜</div>
+                <div class="doc-icon" style="background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);">📜</div>
                 <h3>项目章程</h3>
-                <p>项目正式启动文档，定义项目目标、范围、组织架构和沟通机制</p>
+                <p>项目正式启动文档，明确项目目标、范围、组织架构等</p>
                 <div class="doc-meta">
-                    <span class="doc-tag core">核心</span>
+                    <span class="doc-tag">启动文档</span>
                     <span class="doc-action">创建文档 →</span>
                 </div>
             </div>
-
+            
+            <!-- 正式立项说明 -->
             <div class="doc-card" onclick="openDoc('正式立项说明')">
-                <div class="doc-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">✅</div>
+                <div class="doc-icon" style="background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);">✅</div>
                 <h3>正式立项说明</h3>
-                <p>立项审批通过后的正式通知文档，包含审批意见和项目经理指派</p>
+                <p>立项审批通知文档，包含各级领导审批意见</p>
                 <div class="doc-meta">
-                    <span class="doc-tag core">核心</span>
+                    <span class="doc-tag">审批文档</span>
                     <span class="doc-action">创建文档 →</span>
                 </div>
             </div>
-        </div>
-
-        <!-- 常用文档 -->
-        <div class="section-title">
-            <span>📌</span> 常用文档（执行阶段）
-        </div>
-        <div class="doc-grid">
+            
+            <!-- 项目状态表 -->
             <div class="doc-card" onclick="openDoc('项目状态表')">
-                <div class="doc-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">📈</div>
+                <div class="doc-icon" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);">📈</div>
                 <h3>项目状态表</h3>
-                <p>项目进度跟踪文档，记录各阶段完成情况、风险与问题、资源使用情况</p>
+                <p>项目进度跟踪文档，记录项目整体健康度和关键里程碑</p>
                 <div class="doc-meta">
-                    <span class="doc-tag common">常用</span>
+                    <span class="doc-tag">跟踪文档</span>
                     <span class="doc-action">创建文档 →</span>
                 </div>
             </div>
-
+            
+            <!-- 评审流程 -->
             <div class="doc-card" onclick="openDoc('评审流程')">
-                <div class="doc-icon" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">👥</div>
+                <div class="doc-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">👥</div>
                 <h3>评审流程</h3>
-                <p>各阶段评审记录文档，包含评审意见、问题跟踪、准出准入评审</p>
+                <p>各阶段评审记录文档，包含评审意见和结论</p>
                 <div class="doc-meta">
-                    <span class="doc-tag common">常用</span>
+                    <span class="doc-tag">评审文档</span>
                     <span class="doc-action">创建文档 →</span>
                 </div>
             </div>
-        </div>
-
-        <!-- 结项文档 -->
-        <div class="section-title">
-            <span>🏁</span> 结项文档（收尾阶段）
-        </div>
-        <div class="doc-grid">
+            
+            <!-- 结项报告 -->
             <div class="doc-card" onclick="openDoc('结项报告')">
-                <div class="doc-icon" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">📝</div>
-                <h3>项目结项报告</h3>
-                <p>项目完成总结文档，包含目标完成情况、成果输出、经验教训、财务决算</p>
+                <div class="doc-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">📝</div>
+                <h3>结项报告</h3>
+                <p>项目完成总结文档，包含项目成果和经验教训</p>
                 <div class="doc-meta">
-                    <span class="doc-tag optional">结项</span>
+                    <span class="doc-tag">总结文档</span>
                     <span class="doc-action">创建文档 →</span>
                 </div>
             </div>
-
+            
+            <!-- 成果报告 -->
             <div class="doc-card" onclick="openDoc('成果报告')">
-                <div class="doc-icon" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);">🏆</div>
-                <h3>研发项目成果报告</h3>
-                <p>技术成果展示文档，包含创新点、实施方式、项目效用、成果清单</p>
+                <div class="doc-icon" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">🏆</div>
+                <h3>成果报告</h3>
+                <p>技术成果展示文档，包含创新点和应用价值</p>
                 <div class="doc-meta">
-                    <span class="doc-tag optional">结项</span>
+                    <span class="doc-tag">成果文档</span>
                     <span class="doc-action">创建文档 →</span>
                 </div>
             </div>
         </div>
     </div>
-
+    
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p>XC-Project-PA 项目文档智能助手 © 2026 | 智能化研发项目文档生成工具</p>
+    </footer>
+    
     <script>
         // 打开文档
         function openDoc(docType) {
-            // 根据文档类型跳转到对应的表单页面
             const docMap = {
                 '立项书': 'prototype-form.html',
                 '可行性报告': 'feasibility-form.html',
@@ -305,48 +323,12 @@
                 '项目状态表': 'status-form.html',
                 '评审流程': 'review-form.html',
                 '结项报告': 'closure-form.html',
-                '成果报告': 'achievement-form.html',
-                'API 密钥管理': 'api-key-manager.html'
+                '成果报告': 'achievement-form.html'
             };
             
             const url = docMap[docType] || 'prototype-form.html';
             window.location.href = url;
         }
-
-        // 搜索文档
-        function searchDocs() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase();
-            const cards = document.querySelectorAll('.doc-card');
-            
-            cards.forEach(card => {
-                const title = card.querySelector('h3').textContent.toLowerCase();
-                const desc = card.querySelector('p').textContent.toLowerCase();
-                
-                if (title.includes(filter) || desc.includes(filter)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
     </script>
-    <script src="js/ai-assistant.js"></script>
-    <script src="index_footer.js"></script>
-</body>
-</html>
-ector('h3').textContent.toLowerCase();
-                const desc = card.querySelector('p').textContent.toLowerCase();
-                
-                if (title.includes(filter) || desc.includes(filter)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-    </script>
-    <script src="js/ai-assistant.js"></script>
-    <script src="index_footer.js"></script>
 </body>
 </html>
