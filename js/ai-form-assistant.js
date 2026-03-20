@@ -1516,7 +1516,7 @@ function updateAIStatus(status) {
     // 查找状态显示元素并更新
     const statusElements = document.querySelectorAll('.ai-status-text, .status-text');
     statusElements.forEach(el => {
-        if (status.initialized && status.model) {
+        if (status && status.initialized && status.model) {
             el.textContent = `在线 (${status.model})`;
             el.style.color = '#22c55e';
         }
@@ -1524,4 +1524,9 @@ function updateAIStatus(status) {
     
     // 在控制台显示
     console.log(`🟢 AI 助手已就绪 - 模型：${status.model}`);
+    
+    // 确保 AI 助手面板已创建
+    if (aiAssistant && aiAssistant.panelElement) {
+        console.log('✅ AI 助手面板已创建');
+    }
 }
