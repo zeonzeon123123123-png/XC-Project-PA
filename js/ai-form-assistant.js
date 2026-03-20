@@ -723,8 +723,34 @@ class AIFormAssistant {
         return field.id || field.name || '当前字段';
     }
     
+    // 获取当前表单已填写的数据
+    getCurrentFormData() {
+        const formData = {};
+        const fields = [
+            'projectName', 'projectType', 'productManager', 'projectManager',
+            'techGoal', 'marketGoal', 'budget', 'duration', 'hrRequirement', 'risks',
+            'techFeasibility', 'economicFeasibility', 'necessity',
+            'workingPrinciple', 'productUsage',
+            'techChallenges', 'solutions',
+            'metric1', 'metric2', 'metric3', 'metric4',
+            'totalDuration', 'phases',
+            'totalCost', 'expectedPrice', 'costBreakdown',
+            'targetCustomers', 'competitiveAdvantage'
+        ];
+        
+        fields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field && field.value.trim()) {
+                formData[fieldId] = field.value.trim();
+            }
+        });
+        
+        console.log('📊 当前表单数据:', formData);
+        return formData;
+    }
+    
     // 生成建议
-    async generateSuggestion(fieldId, fieldName, fieldValue) {
+    async generateSuggestion(fieldId, fieldName, fieldValue, formData = {}) {
         // 根据字段类型生成不同建议
         const fieldKeywords = {
             'projectName': ['项目名称', '命名', 'title'],
@@ -749,36 +775,83 @@ class AIFormAssistant {
         
         console.log(`🔍 字段类型：${fieldType}`);
         
-        // 根据类型生成建议
+        // 根据类型生成建议（传入表单数据）
         switch (fieldType) {
             case 'budget':
-                return this.generateBudgetSuggestion(fieldValue);
+                return this.generateBudgetSuggestion(fieldValue, formData);
             case 'duration':
-                return this.generateDurationSuggestion(fieldValue);
+                return this.generateDurationSuggestion(fieldValue, formData);
             case 'techGoal':
-                return this.generateTechGoalSuggestion(fieldValue);
+                return this.generateTechGoalSuggestion(fieldValue, formData);
             case 'techFeasibility':
-                return this.generateFeasibilitySuggestion(fieldValue);
+                return this.generateFeasibilitySuggestion(fieldValue, formData);
             case 'necessity':
-                return this.generateNecessitySuggestion(fieldValue);
+                return this.generateNecessitySuggestion(fieldValue, formData);
             case 'risks':
-                return this.generateRisksSuggestion(fieldValue);
+                return this.generateRisksSuggestion(fieldValue, formData);
             default:
-                return this.generateGeneralSuggestion(fieldId, fieldName, fieldValue);
+                return this.generateGeneralSuggestion(fieldId, fieldName, fieldValue, formData);
         }
     }
     
-    // 生成预算建议
-    generateBudgetSuggestion(currentValue) {
+    // 生成预算建议（结合表单其他字段）
+    generateBudgetSuggestion(currentValue, formData = {}) {
         const projects = this.historyData.projects || [];
-        const budgets = projects.map(p => p.budget).filter(b => b);
+        
+        // 根据项目类型筛选历史项目
+        const projectType = formData.projectType || '';
+        const projectName = formData.projectName || '';
+        
+        let filteredProjects = projects;
+        let suggestionContext = '';
+        
+        // 如果已填写项目类型，按类型筛选
+        if (projectType) {
+            const typeMapping = {
+                '新产品开发': '智能硬件',
+                '技术预研': 'AI 算法',
+                '产品改进': '智能硬件',
+                '云平台/系统': '云平台',
+                'AI 算法': 'AI 算法'
+            };
+            const mappedType = typeMapping[projectType];
+            if (mappedType) {
+                filteredProjects = projects.filter(p => p.type === mappedType);
+                suggestionContext = `根据项目类型"${projectType}"，`;
+            }
+        }
+        
+        // 如果项目名称包含关键词，智能推荐
+        let projectKeyword = '';
+        if (projectName) {
+            if (projectName.includes('摄像头') || projectName.includes('摄像') || projectName.includes('IPC')) {
+                projectKeyword = '摄像头';
+            } else if (projectName.includes('AI') || projectName.includes('算法')) {
+                projectKeyword = 'AI 算法';
+            } else if (projectName.includes('GPU') || projectName.includes('算力')) {
+                projectKeyword = 'GPU';
+            }
+            
+            // 根据关键词筛选相关历史项目
+            if (projectKeyword) {
+                const keywordProjects = projects.filter(p => p.name.includes(projectKeyword));
+                if (keywordProjects.length > 0) {
+                    filteredProjects = keywordProjects;
+                    suggestionContext = `检测到项目名称包含"${projectKeyword}"，`;
+                }
+            }
+        }
+        
+        const budgets = filteredProjects.map(p => p.budget).filter(b => b);
         
         if (budgets.length === 0) {
             return {
-                title: '💡 预算建议',
-                content: '暂无历史数据参考。建议根据项目规模和资源需求合理评估。',
+                title: '💰 预算建议',
+                content: '暂无匹配的历史数据参考。建议根据项目规模和资源需求合理评估。',
                 stats: [],
-                actions: []
+                actions: [
+                    { text: '查看所有历史项目', action: 'showBudgetExamples' }
+                ]
             };
         }
         
@@ -787,9 +860,17 @@ class AIFormAssistant {
         const max = Math.max(...budgets);
         const current = parseFloat(currentValue) || 0;
         
-        let suggestionText = `根据 ${budgets.length} 个历史项目数据：\n`;
+        let suggestionText = `${suggestionContext}参考 ${budgets.length} 个相关历史项目：\n`;
         suggestionText += `• 平均预算：${(avg/10000).toFixed(0)} 万元\n`;
         suggestionText += `• 范围：${(min/10000).toFixed(0)}万 - ${(max/10000).toFixed(0)} 万元`;
+        
+        // 如果已填写周期，提供联动建议
+        if (formData.duration || formData.totalDuration) {
+            const duration = formData.duration || formData.totalDuration;
+            suggestionText += `\n• 当前周期：${duration}个月`;
+            const monthlyBudget = avg / duration;
+            suggestionText += `\n• 建议月度预算：${(monthlyBudget/10000).toFixed(1)}万元/月`;
+        }
         
         if (current > 0) {
             if (current < avg * 0.5) {
@@ -801,12 +882,20 @@ class AIFormAssistant {
             }
         }
         
+        // 添加相关项目参考
+        if (filteredProjects.length > 0) {
+            suggestionText += `\n\n📚 相关项目参考：`;
+            filteredProjects.slice(0, 2).forEach(p => {
+                suggestionText += `\n• ${p.name}：${(p.budget/10000).toFixed(0)}万元`;
+            });
+        }
+        
         return {
             title: '💰 预算建议',
             content: suggestionText,
             stats: [
                 { label: '平均预算', value: `${(avg/10000).toFixed(0)}万` },
-                { label: '项目数量', value: budgets.length.toString() }
+                { label: '相关项目', value: budgets.length.toString() }
             ],
             actions: [
                 { text: '应用平均值', value: avg.toString() },
