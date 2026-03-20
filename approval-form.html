@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正式立项说明 - 智能表单</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f6f7;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 24px; font-weight: 600; }
+        .header-actions { display: flex; gap: 10px; }
+        .header-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .header-btn.primary { background: white; color: #43e97b; }
+        .header-btn.secondary { background: rgba(255,255,255,0.2); color: white; }
+        .header-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            max-width: 1600px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .form-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .form-header h2 { font-size: 20px; color: #333; margin-bottom: 8px; }
+        .form-header p { color: #666; font-size: 14px; }
+        
+        .form-section-group { 
+            margin-bottom: 35px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #43e97b;
+        }
+        .form-section-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-row.single { grid-template-columns: 1fr; }
+        .form-row.three { grid-template-columns: repeat(3, 1fr); }
+        
+        .form-group { position: relative; }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .form-group label .required { color: #f44336; margin-left: 4px; }
+        .form-group label .optional { color: #999; font-weight: 400; font-size: 12px; margin-left: 6px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #43e97b;
+            box-shadow: 0 0 0 3px rgba(67, 233, 123, 0.1);
+        }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+        .form-group .hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 6px;
+        }
+        
+        /* 表格样式 */
+        .dynamic-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .dynamic-table th, .dynamic-table td {
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+        }
+        .dynamic-table th {
+            background: #f5f6f7;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .dynamic-table input, .dynamic-table select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .add-row-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #f5f6f7;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #666;
+            transition: all 0.2s;
+        }
+        .add-row-btn:hover {
+            border-color: #43e97b;
+            color: #43e97b;
+            background: #f0fff4;
+        }
+        .remove-row-btn {
+            padding: 4px 8px;
+            background: #fee;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #c00;
+        }
+        
+        /* 复选框样式 */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .assistant-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        .assistant-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .assistant-header .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .assistant-header h3 { font-size: 16px; color: #333; }
+        
+        .progress-section {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .progress-header h4 { font-size: 14px; }
+        .progress-percent { font-size: 24px; font-weight: 700; }
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: white;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .assistant-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .assistant-section h4 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .assistant-section-content {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+        .action-btn.primary {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+        .action-btn.secondary {
+            background: #f5f6f7;
+            color: #333;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .section-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #43e97b;
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .section-badge.optional {
+            background: #999;
+        }
+        
+        /* 审批意见样式 */
+        .approval-box {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .approval-box.approval { border-left: 4px solid #43e97b; }
+        .approval-box.technical { border-left: 4px solid #2196F3; }
+        .approval-box.finance { border-left: 4px solid #FF9800; }
+        .approval-box.general { border-left: 4px solid #9C27B0; }
+        
+        .approval-box h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .radio-item:hover {
+            background: #f0f2ff;
+            border-color: #43e97b;
+        }
+        .radio-item input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部 -->
+    <div class="header">
+        <h1>✅ 正式立项说明 - 智能表单</h1>
+        <div class="header-actions">
+            <button class="header-btn secondary" onclick="resetForm()">🔄 重置</button>
+            <button class="header-btn primary" onclick="generateDocument()">📤 生成文档</button>
+        </div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="main-container">
+        <!-- 表单区域 -->
+        <div class="form-section">
+            <div class="form-header">
+                <h2>正式立项说明</h2>
+                <p>立项审批通过后的正式通知文档，明确资源需求和审批意见</p>
+            </div>
+
+            <!-- 基本信息 -->
+            <div class="form-section-group">
+                <h3 class="form-section-title">📋 一、基本信息 <span class="section-badge">必填</span></h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>项目名称 <span class="required">*</span></label>
+                        <input type="text" id="projectName" placeholder="请输入项目名称" onchange="handleFieldChange('projectName')">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>文档编号</label>
+                        <input type="text" id="docNumber" placeholder="例如：XC-APPROVAL-2026-001" onchange="handleFieldChange('docNumber')">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>版本号</label>
+                        <input type="text" id="version" placeholder="例如：v1.0" value="v1.0" onchange="handleFieldChange('version')">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>编制日期 <span class="required">*</span></label>
+                        <input type="date" id="createDate" onchange="handleFieldChange('createDate')">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 项目背景 -->
+            <div class="form-section-group">
+                <h3 class="form-section-title">📖 二、项目背景 <span class="section-badge">必填</span></h3>
+                
+                <div class="form-section-title" style="font-size: 15px; border-left: 3px solid #43e97b; padding-left: 10px; margin-bottom: 15px;">1.1 市场需求</div>
+                
+                <div class="form-row single">
+                    <div class="form-group">
+                        <label>市场机会 <span class="required">*</span></label>
+                        <textarea id="marketOpportunity" placeholder="描述市场机会..." rows="2" onchange="handleFieldChange('marketOpportunity')"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>市场规模</label>
+                        <input type="text" id="marketSize" placeholder="例如：10 亿元" onchange="handleFieldChange('marketSize')">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>增长趋势</label>
+                        <input type="text" id="growthTrend" placeholder="例如：年增长率 25%" onchange="handleFieldChange('growthTrend')">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>目标客户</label>
+                        <input type="text" id="targetCustomer" placeholder="描述目标客户群体" onchange="handleFieldChange('targetCustomer')">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>主要竞品</label>
+                        <input type="text" id="mainCompetitors" placeholder="列出主要竞品" onchange="handleFieldChange('mainCompetitors')">
+                    </div>
+                </div>
+                
+                <div class="form-row single">
+                    <div class="form-group">
+                        <label>差异化优势</label>
+                        <textarea id="competitiveAdvantage" placeholder="描述我们的差异化优势..." rows="2" onchange="handleFieldChange('competitiveAdvantage')"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-section-title" style="font-size: 15px; border-left: 3px solid #43e97b; padding-left: 10px; margin: 20px 0 15px;">1.2 技术趋势</div>
+                
+                <div class="form-row single">
+                    <div class="form-group">
+                        <label>技术发展方向</label>
+                        <textarea id="techDirection" placeholder="描述技术发展方向..." rows="2" onchange="handleFieldChange('techDirection')"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-row single">
+                    <div class="form-group">
+                        <label>我司技术定位</label>
+                        <textarea id="techPosition" placeholder="描述我司技术定位..." rows="2" onchange="handleFieldChange('techPosition')"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-section-title" style="font-size: 15px; border-left: 3px solid #43e97b; padding-left: 10px; margin: 20px 0 15px;">1.3 立项必要性</div>
+                
+                <div class="form-group">
+                    <label>战略意义 <span class="required">*</span></label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="strategic1" onchange="handleFieldChange('strategic1')">
+                            <span>符合公司战略方向</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="strategic2" onchange="handleFieldChange('strategic2')">
+                            <span>填补产品空白</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="strategic3" onchange="handleFieldChange('strategic3')">
+                            <span>提升技术能力</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="strategic4" onchange="handleFieldChange('strategic4')">
+                            <span>其他：</span>
+                            <input type="text" id="strategicOther" placeholder="请说明" style="width: 200px; margin-left: 10px;" onchange="handleFieldChange('strategicOther')">
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>预期收益（元） <span class="required">*</span></label>
+                        <input type="number" id="expectedRevenue" placeholder="请输入预期收益" onchange="handleFieldChange('expectedRevenue')">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>投资回报周期（月）</label>
+                        <input type="number" id="roiMonths" placeholder="请输入月数" onchange="handleFieldChange('roiMonths')">
+                    </div>
+                </div>
+                
+                <div class="form-row single">
+                    <div class="form-group">
+                        <label>战略价值说明</label>
+                        <textarea id="strategicValue" placeholder="详细说明战略价值..." rows="2" onchange="handleFieldChange('strategicValue')"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 资源需求 -->
+            <div class="form-section-group">
+                <h3 class="form-section-title">💰 三、资源需求 <span class="section-badge">必填</span></h3>
+                
+                <div class="form-section-title" style="font-size: 15px; border-left: 3px solid #43e97b; padding-left: 10px; margin-bottom: 15px;">2.1 预算需求</div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>总预算（元） <span class="required">*</span></label>
+                        <input type="number" id="totalBudget" placeholder="请输入总预算" onchange="handleFieldChange('totalBudget')">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>总人力（人月）</label>
+                        <input type="number" id="totalManMonth" placeholder="请输入总人力" onchange="handleFieldChange('totalManMonth')">
+                    </div>
+                </div>
+                
+                <!-- 预算明细表 -->
+                <div class="form-group">
+                    <label>预算明细 <span class="optional">（选填）</span></label>
+                    <table class="dynamic-table" id="budgetTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;">费用类别</th>
+                                <th style="width: 35%;">预算金额（元）</th>
+                                <th style="width: 35%;">说明</th>
+                                <th style="width: 5%;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" value="人力成本"></td>
+                                <td><input type="number" placeholder="0" class="budget-amount" onchange="calcBudget()"></td>
+                                <td><input type="text" placeholder="人×月"></td>
+                                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" value="设备采购"></td>
+                                <td><input type="number" placeholder="0" class="budget-amount" onchange="calcBudget()"></td>
+                                <td><input type="text" placeholder="说明"></td>
+                                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" value="外协费用"></td>
+                                <td><input type="number" placeholder="0" class="budget-amount" onchange="calcBudget()"></td>
+                                <td><input type="text" placeholder="说明"></td>
+                                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" value="测试认证"></td>
+                                <td><input type="number" placeholder="0" class="budget-amount" onchange="calcBudget()"></td>
+                                <td><input type="text" placeholder="说明"></td>
+                                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" value="其他费用"></td>
+                                <td><input type="number" placeholder="0" class="budget-amount" onchange="calcBudget()"></td>
+                                <td><input type="text" placeholder="说明"></td>
+                                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-row-btn" onclick="addBudgetRow()">+ 添加预算项</button>
+                </div>
+                
+                <div class="form-section-title" style="font-size: 15px; border-left: 3px solid #43e97b; padding-left: 10px; margin: 25px 0 15px;">2.2 人力资源</div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>项目经理</label>
+                        <input type="text" id="pmName" placeholder="姓名" onchange="handleFieldChange('pmName')">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>核心成员人数</label>
+                        <input type="number" id="coreMembers" placeholder="人数" onchange="handleFieldChange('coreMembers')">
+                    </div>
+                </div>
+                
+                <!-- 关键岗位表 -->
+                <div class="form-group">
+                    <label>关键岗位 <span class="optional">（选填）</span></label>
+                    <table class="dynamic-table" id="positionTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">岗位</th>
+                                <th style="width: 20%;">人数</th>
+                                <th style="width: 30%;">技能要求</th>
+                                <th style="width: 20%;">到位时间</th>
+                                <th style="width: 5%;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" placeholder="岗位名称"></td>
+                                <td><input type="number" placeholder="1"></td>
+                                <td><input type="text" placeholder="技能要求"></td>
+                                <td><input type="date"></td>
+                                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" placeholder="岗位名称"></td>
+                                <td><input type="number" placeholder="1"></td>
+                                <td><input type="text" placeholder="技能要求"></td>
+                                <td><input type="date"></td>
+                                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-row-btn" onclick="addPositionRow()">+ 添加岗位</button>
+                </div>
+                
+                <div class="form-section-title" style="font-size: 15px; border-left: 3px solid #43e97b; padding-left: 10px; margin: 25px 0 15px;">2.3 开发周期</div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>项目启动日期 <span class="required">*</span></label>
+                        <input type="date" id="startDate" onchange="handleFieldChange('startDate')">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>预计完成日期 <span class="required">*</span></label>
+                        <input type="date" id="endDate" onchange="handleFieldChange('endDate')">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>总开发周期（月）</label>
+                        <input type="number" id="totalMonths" placeholder="自动计算" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>项目经理</label>
+                        <input type="text" id="assignedPM" placeholder="被指派的经理姓名" onchange="handleFieldChange('assignedPM')">
+                    </div>
+                </div>
+                
+                <!-- 关键时间节点表 -->
+                <div class="form-group">
+                    <label>关键时间节点 <span class="optional">（选填）</span></label>
+                    <table class="dynamic-table" id="timelineTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;">节点</th>
+                                <th style="width: 25%;">时间</th>
+                                <th style="width: 40%;">交付物</th>
+                                <th style="width: 5%;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" value="项目启动"></td>
+                                <td><input type="date"></td>
+                                <td><input type="text" placeholder="交付物"></td>
+                                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" value="方案冻结"></td>
+                                <td><input type="date"></td>
+                                <td><input type="text" placeholder="交付物"></td>
+                                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" value="设计完成"></td>
+                                <td><input type="date"></td>
+                                <td><input type="text" placeholder="交付物"></td>
+                                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" value="样机完成"></td>
+                                <td><input type="date"></td>
+                                <td><input type="text" placeholder="交付物"></td>
+                                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" value="量产上市"></td>
+                                <td><input type="date"></td>
+                                <td><input type="text" placeholder="交付物"></td>
+                                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 审批意见 -->
+            <div class="form-section-group">
+                <h3 class="form-section-title">✍️ 四、审批意见 <span class="section-badge">必填</span></h3>
+                
+                <!-- 部门负责人意见 -->
+                <div class="approval-box approval">
+                    <h4>3.1 部门负责人意见</h4>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" name="deptApproval" value="同意立项" onchange="handleFieldChange('deptApproval')">
+                            <span>✅ 同意立项</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="deptApproval" value="不同意立项" onchange="handleFieldChange('deptApproval')">
+                            <span>❌ 不同意立项</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="deptApproval" value="需补充材料" onchange="handleFieldChange('deptApproval')">
+                            <span>⚠️ 需补充材料后重新审议</span>
+                        </label>
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>建议/要求</label>
+                        <textarea id="deptComments" placeholder="请输入建议或要求..." rows="2" onchange="handleFieldChange('deptComments')"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>签字</label>
+                            <input type="text" id="deptSign" placeholder="签字姓名" onchange="handleFieldChange('deptSign')">
+                        </div>
+                        <div class="form-group">
+                            <label>日期</label>
+                            <input type="date" id="deptDate" onchange="handleFieldChange('deptDate')">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 技术负责人意见 -->
+                <div class="approval-box technical">
+                    <h4>3.2 技术负责人意见</h4>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" name="techApproval" value="技术可行，同意立项" onchange="handleFieldChange('techApproval')">
+                            <span>✅ 技术可行，同意立项</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="techApproval" value="技术需进一步验证" onchange="handleFieldChange('techApproval')">
+                            <span>⚠️ 技术需进一步验证</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="techApproval" value="技术风险较高" onchange="handleFieldChange('techApproval')">
+                            <span>❌ 技术风险较高，不建议立项</span>
+                        </label>
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>技术建议</label>
+                        <textarea id="techComments" placeholder="请输入技术建议..." rows="2" onchange="handleFieldChange('techComments')"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>签字</label>
+                            <input type="text" id="techSign" placeholder="签字姓名" onchange="handleFieldChange('techSign')">
+                        </div>
+                        <div class="form-group">
+                            <label>日期</label>
+                            <input type="date" id="techDate" onchange="handleFieldChange('techDate')">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 财务负责人意见 -->
+                <div class="approval-box finance">
+                    <h4>3.3 财务负责人意见</h4>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" name="financeApproval" value="预算合理，同意立项" onchange="handleFieldChange('financeApproval')">
+                            <span>✅ 预算合理，同意立项</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="financeApproval" value="预算需调整" onchange="handleFieldChange('financeApproval')">
+                            <span>⚠️ 预算需调整</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="financeApproval" value="财务风险较高" onchange="handleFieldChange('financeApproval')">
+                            <span>❌ 财务风险较高，不建议立项</span>
+                        </label>
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>财务建议</label>
+                        <textarea id="financeComments" placeholder="请输入财务建议..." rows="2" onchange="handleFieldChange('financeComments')"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>签字</label>
+                            <input type="text" id="financeSign" placeholder="签字姓名" onchange="handleFieldChange('financeSign')">
+                        </div>
+                        <div class="form-group">
+                            <label>日期</label>
+                            <input type="date" id="financeDate" onchange="handleFieldChange('financeDate')">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 总经理审批 -->
+                <div class="approval-box general">
+                    <h4>3.4 总经理审批</h4>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" name="generalApproval" value="批准立项" onchange="handleFieldChange('generalApproval')">
+                            <span>✅ 批准立项</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="generalApproval" value="不批准立项" onchange="handleFieldChange('generalApproval')">
+                            <span>❌ 不批准立项</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="generalApproval" value="暂缓" onchange="handleFieldChange('generalApproval')">
+                            <span>⏸️ 暂缓，待条件成熟后重新审议</span>
+                        </label>
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>批示</label>
+                        <textarea id="generalComments" placeholder="请输入批示..." rows="2" onchange="handleFieldChange('generalComments')"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>签字 <span class="required">*</span></label>
+                            <input type="text" id="generalSign" placeholder="签字姓名" onchange="handleFieldChange('generalSign')" required>
+                        </div>
+                        <div class="form-group">
+                            <label>日期</label>
+                            <input type="date" id="generalDate" onchange="handleFieldChange('generalDate')">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 项目经理指派 -->
+            <div class="form-section-group">
+                <h3 class="form-section-title">👤 五、项目经理指派 <span class="section-badge">必填</span></h3>
+                
+                <div class="form-row single">
+                    <div class="form-group">
+                        <label>指派项目经理 <span class="required">*</span></label>
+                        <input type="text" id="pmAssign" placeholder="被指派的经理姓名" onchange="handleFieldChange('pmAssign')">
+                    </div>
+                </div>
+                
+                <div class="form-row single">
+                    <div class="form-group">
+                        <label>职责说明</label>
+                        <textarea id="pmResponsibilities" placeholder="项目经理职责说明..." rows="3" onchange="handleFieldChange('pmResponsibilities')"></textarea>
+                        <div class="hint">💡 提示：负责项目整体规划和进度控制、协调项目资源和团队管理、负责项目风险识别和应对等</div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>签字</label>
+                        <input type="text" id="pmAssignSign" placeholder="签字姓名" onchange="handleFieldChange('pmAssignSign')">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>日期</label>
+                        <input type="date" id="pmAssignDate" onchange="handleFieldChange('pmAssignDate')">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 附件清单 -->
+            <div class="form-section-group">
+                <h3 class="form-section-title">📎 六、附件清单 <span class="section-badge optional">选填</span></h3>
+                
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="attach1" onchange="handleFieldChange('attach1')">
+                        <span>附件 1：立项书（已审批）</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="attach2" onchange="handleFieldChange('attach2')">
+                        <span>附件 2：可行性报告（已审批）</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="attach3" onchange="handleFieldChange('attach3')">
+                        <span>附件 3：预算明细表</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="attach4" onchange="handleFieldChange('attach4')">
+                        <span>附件 4：项目进度计划</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 智能助手面板 -->
+        <div class="assistant-panel">
+            <div class="assistant-header">
+                <div class="avatar">🤖</div>
+                <div>
+                    <h3>智能助手</h3>
+                </div>
+            </div>
+
+            <!-- 填写进度 -->
+            <div class="progress-section">
+                <div class="progress-header">
+                    <h4>📊 填写进度</h4>
+                    <div class="progress-percent" id="progressPercent">0%</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- 必填字段检查 -->
+            <div class="assistant-section">
+                <h4>✅ 必填字段检查</h4>
+                <div class="assistant-section-content" id="requiredCheck">
+                    <div style="color: #999; text-align: center; padding: 20px;">
+                        开始填写后<br>显示检查结果
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <button class="action-btn primary" onclick="autoFill()">🤖 一键智能填充</button>
+            <button class="action-btn secondary" onclick="validateForm()">✅ 检查完整性</button>
+            <button class="action-btn secondary" onclick="resetForm()">🔄 重置表单</button>
+        </div>
+    </div>
+
+    <script>
+        // 表单状态
+        let formState = {};
+
+        // 必填字段列表
+        const requiredFields = [
+            {id: 'projectName', label: '项目名称'},
+            {id: 'createDate', label: '编制日期'},
+            {id: 'marketOpportunity', label: '市场机会'},
+            {id: 'expectedRevenue', label: '预期收益'},
+            {id: 'totalBudget', label: '总预算'},
+            {id: 'startDate', label: '项目启动日期'},
+            {id: 'endDate', label: '预计完成日期'},
+            {id: 'generalSign', label: '总经理签字'},
+            {id: 'pmAssign', label: '指派项目经理'}
+        ];
+
+        // 字段变更处理
+        function handleFieldChange(field) {
+            const value = document.getElementById(field).value;
+            formState[field] = value;
+            updateProgress();
+            checkRequiredFields();
+            
+            // 自动计算开发周期
+            if (field === 'startDate' || field === 'endDate') {
+                calcDuration();
+            }
+        }
+
+        // 计算开发周期
+        function calcDuration() {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            
+            if (start && end) {
+                const startDate = new Date(start);
+                const endDate = new Date(end);
+                const months = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24 * 30));
+                document.getElementById('totalMonths').value = months;
+            }
+        }
+
+        // 预设值列表（不计入进度）
+        const presetValues = ['人力成本', '设备采购', '外协费用', '测试认证', '其他费用', '项目启动', '方案冻结', '设计完成', '样机完成', '量产上市'];
+        
+        // 更新进度
+        function updateProgress() {
+            let filledFields = 0;
+            let actualCount = 0;
+            
+            // 统计必填字段
+            requiredFields.forEach(field => {
+                actualCount++;
+                const el = document.getElementById(field.id);
+                if (el && el.value && el.value.trim() !== '') {
+                    filledFields++;
+                }
+            });
+            
+            // 统计单行输入和文本域（排除表格中的预设值）
+            document.querySelectorAll('input:not([readonly]):not([type="checkbox"]):not([type="radio"]):not([type="date"]), textarea').forEach(el => {
+                // 跳过表格中的预设值
+                if (el.closest('.dynamic-table') && presetValues.includes(el.value)) {
+                    return;
+                }
+                actualCount++;
+                if (el.value && el.value.trim() !== '' && !presetValues.includes(el.value)) {
+                    filledFields++;
+                }
+            });
+            
+            // 统计日期选择器
+            document.querySelectorAll('input[type="date"]').forEach(el => {
+                actualCount++;
+                if (el.value) {
+                    filledFields++;
+                }
+            });
+            
+            // 统计单选按钮组（每组算 1 个字段）
+            const radioGroups = {};
+            document.querySelectorAll('input[type="radio"]').forEach(el => {
+                const groupName = el.name;
+                if (!radioGroups[groupName]) {
+                    radioGroups[groupName] = true;
+                    actualCount++;
+                }
+                if (el.checked) {
+                    filledFields++;
+                }
+            });
+            
+            // 统计复选框
+            document.querySelectorAll('input[type="checkbox"]').forEach(el => {
+                actualCount++;
+                if (el.checked) {
+                    filledFields++;
+                }
+            });
+            
+            // 统计表格填写（排除预设值）
+            document.querySelectorAll('.dynamic-table tbody tr').forEach(row => {
+                const inputs = row.querySelectorAll('input:not([type="date"]), select');
+                let rowFilled = 0;
+                let rowHasValue = false;
+                inputs.forEach(input => {
+                    if (input.value && input.value.trim() !== '' && !presetValues.includes(input.value)) {
+                        rowFilled++;
+                        rowHasValue = true;
+                    }
+                });
+                if (rowHasValue) {
+                    actualCount += inputs.length;
+                    filledFields += rowFilled;
+                }
+            });
+            
+            // 使用实际计数计算百分比
+            const percent = actualCount > 0 ? Math.min(100, Math.round((filledFields / actualCount) * 100)) : 0;
+            document.getElementById('progressPercent').textContent = `${percent}%`;
+            document.getElementById('progressFill').style.width = `${percent}%`;
+        }
+
+        // 检查必填字段
+        function checkRequiredFields() {
+            const container = document.getElementById('requiredCheck');
+            let missing = [];
+            
+            requiredFields.forEach(field => {
+                const el = document.getElementById(field.id);
+                if (!el || !el.value || el.value.trim() === '') {
+                    missing.push(field.label);
+                }
+            });
+            
+            if (missing.length === 0) {
+                container.innerHTML = '<div style="color: #4caf50; text-align: center; padding: 15px;"><strong>✅ 所有必填字段已完成！</strong></div>';
+            } else {
+                let html = '<div style="color: #f44336; padding: 10px;"><strong>⚠️ 还需填写：</strong></div>';
+                html += '<ul style="padding-left: 20px; margin-top: 8px;">';
+                missing.slice(0, 5).forEach(item => {
+                    html += `<li style="color: #666; font-size: 13px; margin: 4px 0;">${item}</li>`;
+                });
+                if (missing.length > 5) {
+                    html += `<li style="color: #999; font-size: 12px;">还有 ${missing.length - 5} 项...</li>`;
+                }
+                html += '</ul>';
+                container.innerHTML = html;
+            }
+        }
+
+        // 添加预算行
+        function addBudgetRow() {
+            const tbody = document.querySelector('#budgetTable tbody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" placeholder="费用类别"></td>
+                <td><input type="number" placeholder="0" class="budget-amount" onchange="calcBudget()"></td>
+                <td><input type="text" placeholder="说明"></td>
+                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+            `;
+            tbody.appendChild(newRow);
+        }
+
+        // 添加岗位行
+        function addPositionRow() {
+            const tbody = document.querySelector('#positionTable tbody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" placeholder="岗位名称"></td>
+                <td><input type="number" placeholder="1"></td>
+                <td><input type="text" placeholder="技能要求"></td>
+                <td><input type="date"></td>
+                <td><button class="remove-row-btn" onclick="removeRow(this)">删除</button></td>
+            `;
+            tbody.appendChild(newRow);
+        }
+
+        // 删除行
+        function removeRow(btn) {
+            if (confirm('确定要删除这一行吗？')) {
+                btn.closest('tr').remove();
+                calcBudget();
+            }
+        }
+
+        // 计算预算
+        function calcBudget() {
+            let total = 0;
+            document.querySelectorAll('.budget-amount').forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+            document.getElementById('totalBudget').value = total;
+            handleFieldChange('totalBudget');
+        }
+
+        // 一键智能填充
+        function autoFill() {
+            const today = new Date().toISOString().split('T')[0];
+            const nextMonth = new Date();
+            nextMonth.setMonth(nextMonth.getMonth() + 4);
+            const endDate = nextMonth.toISOString().split('T')[0];
+            
+            // 基本信息
+            document.getElementById('projectName').value = '智能摄像机 X1 开发项目';
+            document.getElementById('docNumber').value = 'XC-APPROVAL-2026-001';
+            document.getElementById('version').value = 'v1.0';
+            document.getElementById('createDate').value = today;
+            
+            // 市场机会
+            document.getElementById('marketOpportunity').value = '智能家居市场快速增长，用户对家庭安全监控需求强烈，现有产品在 AI 检测功能上存在不足';
+            document.getElementById('marketSize').value = '10 亿元';
+            document.getElementById('growthTrend').value = '年增长率 25%';
+            document.getElementById('targetCustomer').value = '25-45 岁中产家庭，有婴幼儿或宠物的家庭';
+            document.getElementById('mainCompetitors').value = '小米智能摄像机、360 智能摄像机、萤石云';
+            document.getElementById('competitiveAdvantage').value = '自研 AI 算法，人形检测准确率>95%，哭声检测准确率>90%，价格优势明显';
+            
+            // 技术趋势
+            document.getElementById('techDirection').value = 'AI 边缘计算、4K 高清、云存储、智能家居生态联动';
+            document.getElementById('techPosition').value = '掌握核心 AI 算法，具备完整硬件开发能力，定位中端市场';
+            
+            // 战略意义
+            document.getElementById('strategic1').checked = true;
+            document.getElementById('strategic2').checked = true;
+            document.getElementById('strategic3').checked = true;
+            
+            // 商业价值
+            document.getElementById('expectedRevenue').value = '50000000';
+            document.getElementById('roiMonths').value = '18';
+            document.getElementById('strategicValue').value = '切入智能家居赛道，完善产品生态，提升品牌影响力';
+            
+            // 资源需求
+            document.getElementById('totalBudget').value = '800000';
+            document.getElementById('totalManMonth').value = '24';
+            document.getElementById('pmName').value = '李经理';
+            document.getElementById('coreMembers').value = '8';
+            
+            // 开发周期
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = endDate;
+            document.getElementById('assignedPM').value = '李经理';
+            
+            // 审批意见
+            document.querySelector('input[name="deptApproval"][value="同意立项"]').checked = true;
+            document.getElementById('deptComments').value = '项目符合公司战略方向，建议加快推进';
+            document.getElementById('deptSign').value = '张总';
+            document.getElementById('deptDate').value = today;
+            
+            document.querySelector('input[name="techApproval"][value="技术可行，同意立项"]').checked = true;
+            document.getElementById('techComments').value = '技术方案可行，团队具备相应能力';
+            document.getElementById('techSign').value = '王总工';
+            document.getElementById('techDate').value = today;
+            
+            document.querySelector('input[name="financeApproval"][value="预算合理，同意立项"]').checked = true;
+            document.getElementById('financeComments').value = '预算编制合理，符合公司财务政策';
+            document.getElementById('financeSign').value = '赵财务';
+            document.getElementById('financeDate').value = today;
+            
+            document.querySelector('input[name="generalApproval"][value="批准立项"]').checked = true;
+            document.getElementById('generalComments').value = '同意立项，请项目团队按计划推进，确保按期交付';
+            document.getElementById('generalSign').value = '刘总';
+            document.getElementById('generalDate').value = today;
+            
+            // 项目经理指派
+            document.getElementById('pmAssign').value = '李经理';
+            document.getElementById('pmResponsibilities').value = '负责项目整体规划和进度控制；协调项目资源和团队管理；负责项目风险识别和应对；负责项目干系人沟通；负责项目交付和结项';
+            document.getElementById('pmAssignSign').value = '刘总';
+            document.getElementById('pmAssignDate').value = today;
+            
+            // 附件
+            document.getElementById('attach1').checked = true;
+            document.getElementById('attach2').checked = true;
+            document.getElementById('attach3').checked = true;
+            document.getElementById('attach4').checked = true;
+            
+            calcDuration();
+            updateProgress();
+            alert('✅ 已智能填充表单内容，请检查确认并补充详细信息');
+        }
+
+        // 检查完整性
+        function validateForm() {
+            const missing = [];
+            requiredFields.forEach(field => {
+                const el = document.getElementById(field.id);
+                if (!el || !el.value || el.value.trim() === '') {
+                    missing.push(field.label);
+                }
+            });
+            
+            if (missing.length === 0) {
+                alert('✅ 所有必填字段已填写完整！可以生成文档了');
+            } else {
+                alert(`⚠️ 还有 ${missing.length} 个必填字段未填写：\n${missing.join(', ')}`);
+            }
+        }
+
+        // 重置表单
+        function resetForm() {
+            if (confirm('确定要重置表单吗？所有已填写内容将被清空。')) {
+                // 清空所有输入（除了表格中的预设值）
+                document.querySelectorAll('input:not([readonly]), textarea').forEach(el => {
+                    if (el.type === 'button') return;
+                    if (el.type === 'checkbox' || el.type === 'radio') {
+                        el.checked = false;
+                        return;
+                    }
+                    // 检查是否是表格中的预设值
+                    if (el.closest('.dynamic-table') && presetValues.includes(el.value)) {
+                        return; // 保留预设值
+                    }
+                    el.value = '';
+                });
+                
+                formState = {};
+                updateProgress();
+                checkRequiredFields();
+            }
+        }
+
+        // 生成文档
+        function generateDocument() {
+            validateForm();
+            alert('📤 文档生成中...\n\n（实际应用中会生成飞书文档）');
+        }
+
+        // 初始化
+        updateProgress();
+    </script>
+</body>
+</html>

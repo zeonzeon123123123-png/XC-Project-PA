@@ -1,0 +1,77 @@
+{
+  "providers": {
+    "qwen": {
+      "name": "阿里云 Qwen",
+      "type": "direct",
+      "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "keys": [],
+      "alertThreshold": 80,
+      "capabilities": ["text", "image"]
+    },
+    "glm": {
+      "name": "智谱 GLM",
+      "type": "direct",
+      "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
+      "keys": [],
+      "alertThreshold": 80,
+      "capabilities": ["text", "image"]
+    },
+    "proxy": {
+      "name": "代理平台",
+      "type": "proxy",
+      "baseUrl": "",
+      "keys": [],
+      "alertThreshold": 80,
+      "capabilities": ["text", "image"]
+    },
+    "openrouter": {
+      "name": "OpenRouter",
+      "type": "proxy",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "keys": [],
+      "alertThreshold": 80,
+      "capabilities": ["text", "image"]
+    },
+    "siliconflow": {
+      "name": "SiliconFlow",
+      "type": "proxy",
+      "baseUrl": "https://api.siliconflow.cn/v1",
+      "keys": [],
+      "alertThreshold": 80,
+      "capabilities": ["text", "image"]
+    },
+    "openai": {
+      "name": "OpenAI",
+      "type": "direct",
+      "baseUrl": "https://api.openai.com/v1",
+      "keys": [],
+      "alertThreshold": 80,
+      "capabilities": ["text", "image"]
+    },
+    "anthropic": {
+      "name": "Anthropic",
+      "type": "direct",
+      "baseUrl": "https://api.anthropic.com",
+      "keys": [],
+      "alertThreshold": 80,
+      "capabilities": ["text"]
+    },
+    "yolo": {
+      "name": "YOLO-World",
+      "type": "direct",
+      "baseUrl": "https://model.cnfcloud.com/Yolov8x-worldv2/v1",
+      "keys": [],
+      "alertThreshold": 80,
+      "capabilities": ["image"]
+    }
+  },
+  "alerts": {
+    "enabled": true,
+    "globalThreshold": 80,
+    "autoCheckInterval": 30,
+    "autoCheckEnabled": false,
+    "channels": ["webchat"]
+  },
+  "lastUpdated": null,
+  "version": "2.0"
+}

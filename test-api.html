@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 连接测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f6f7;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 { font-size: 24px; margin-bottom: 20px; }
+        .test-item {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        .test-item h3 { font-size: 16px; margin-bottom: 10px; }
+        .test-result {
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .success { background: #e8f5e9; color: #2e7d32; }
+        .error { background: #ffebee; color: #c62828; }
+        .loading { background: #e3f2fd; color: #1976d2; }
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        button:hover { background: #5568d3; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 API 连接测试</h1>
+        
+        <div class="input-group">
+            <label>选择供应商</label>
+            <select id="provider" onchange="toggleCustomEndpoint()">
+                <option value="zhipu">智谱 AI</option>
+                <option value="openai">OpenAI</option>
+                <option value="moonshot">月之暗面 (Kimi)</option>
+                <option value="alibaba">通义千问</option>
+                <option value="deepseek">DeepSeek</option>
+                <option value="custom">🔧 自定义（代理平台）</option>
+            </select>
+        </div>
+        
+        <div class="input-group" id="customEndpointGroup" style="display: none;">
+            <label>🔗 自定义 API 端点</label>
+            <input type="text" id="customBaseUrl" placeholder="例如：https://api.your-proxy.com/v1">
+        </div>
+        
+        <div class="input-group">
+            <label>API Key</label>
+            <input type="password" id="apiKey" placeholder="请输入你的 API Key">
+        </div>
+        
+        <div class="input-group">
+            <label>模型名称</label>
+            <input type="text" id="model" value="glm-4" placeholder="例如：glm-4">
+        </div>
+        
+        <button onclick="testConnection()" id="testBtn">🔌 测试连接</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // AI 供应商配置
+        const AI_PROVIDERS = {
+            zhipu: {
+                baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
+                endpoint: '/chat/completions'
+            },
+            openai: {
+                baseUrl: 'https://api.openai.com/v1',
+                endpoint: '/chat/completions'
+            },
+            moonshot: {
+                baseUrl: 'https://api.moonshot.cn/v1',
+                endpoint: '/chat/completions'
+            },
+            alibaba: {
+                baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+                endpoint: '/chat/completions'
+            },
+            deepseek: {
+                baseUrl: 'https://api.deepseek.com/v1',
+                endpoint: '/chat/completions'
+            }
+        };
+
+        // 切换自定义端点显示
+        function toggleCustomEndpoint() {
+            const provider = document.getElementById('provider').value;
+            const customGroup = document.getElementById('customEndpointGroup');
+            customGroup.style.display = provider === 'custom' ? 'block' : 'none';
+        }
+
+        async function testConnection() {
+            const provider = document.getElementById('provider').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const model = document.getElementById('model').value;
+            const customBaseUrl = document.getElementById('customBaseUrl').value;
+            
+            if (!apiKey) {
+                alert('请输入 API Key');
+                return;
+            }
+            
+            if (provider === 'custom' && !customBaseUrl) {
+                alert('自定义平台请填写 API 端点');
+                return;
+            }
+            
+            let baseUrl, endpoint;
+            if (provider === 'custom') {
+                baseUrl = customBaseUrl.replace(/\/$/, '');
+                endpoint = '/chat/completions';
+            } else {
+                const config = AI_PROVIDERS[provider];
+                baseUrl = config.baseUrl;
+                endpoint = config.endpoint;
+            }
+            
+            const btn = document.getElementById('testBtn');
+            const results = document.getElementById('results');
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ 测试中...';
+            
+            results.innerHTML = `
+                <div class="test-item">
+                    <h3>测试信息</h3>
+                    <div class="test-result loading">
+                        <strong>供应商：</strong>${provider === 'custom' ? '自定义（代理平台）' : provider}<br>
+                        <strong>模型：</strong>${model}<br>
+                        <strong>端点：</strong>${baseUrl}${endpoint}<br>
+                        <br>
+                        正在发送测试请求...
+                    </div>
+                </div>
+            `;
+            
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch(baseUrl + endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [
+                            { role: 'user', content: 'Hello, this is a test message.' }
+                        ],
+                        max_tokens: 10
+                    })
+                });
+                
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    results.innerHTML += `
+                        <div class="test-item">
+                            <h3>✅ 测试成功</h3>
+                            <div class="test-result success">
+                                <strong>HTTP 状态：</strong>${response.status} ${response.statusText}<br>
+                                <strong>响应时间：</strong>${duration}ms<br>
+                                <strong>返回内容：</strong>${data.choices?.[0]?.message?.content?.substring(0, 100) || 'N/A'}...<br>
+                                <strong>Token 使用：</strong>${JSON.stringify(data.usage || 'N/A')}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    results.innerHTML += `
+                        <div class="test-item">
+                            <h3>❌ 测试失败</h3>
+                            <div class="test-result error">
+                                <strong>HTTP 状态：</strong>${response.status} ${response.statusText}<br>
+                                <strong>响应时间：</strong>${duration}ms<br>
+                                <strong>错误信息：</strong>${errorData.error?.message || JSON.stringify(errorData)}
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                results.innerHTML += `
+                    <div class="test-item">
+                        <h3>❌ 网络错误</h3>
+                        <div class="test-result error">
+                            <strong>响应时间：</strong>${duration}ms<br>
+                            <strong>错误信息：</strong>${error.message}<br>
+                            <br>
+                            <strong>可能原因：</strong><br>
+                            1. 网络连接问题<br>
+                            2. API 端点不可达<br>
+                            3. 跨域限制（CORS）
+                        </div>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔌 测试连接';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Key 管理 - 项目文档智能助手</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 24px; font-weight: 600; }
+        .header-actions { display: flex; gap: 10px; }
+        .header-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .header-btn.primary { background: white; color: #667eea; }
+        .header-btn.secondary { background: rgba(255,255,255,0.2); color: white; }
+        .header-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        
+        .content { padding: 40px; }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .form-group .hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 6px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #f5f6f7;
+            color: #333;
+        }
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* API Key 列表 */
+        .key-list {
+            margin-top: 20px;
+        }
+        .key-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+        .key-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .key-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        .key-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .key-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .key-meta {
+            font-size: 13px;
+            color: #999;
+        }
+        .key-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .key-status.active { background: #e8f5e9; color: #2e7d32; }
+        .key-status.inactive { background: #ffebee; color: #c62828; }
+        .key-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 20px;
+        }
+        .key-actions .btn {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+        
+        /* 帮助说明 */
+        .help-section {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        .help-section ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        .help-section li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+        .help-section a {
+            color: #2196f3;
+            text-decoration: none;
+        }
+        .help-section a:hover {
+            text-decoration: underline;
+        }
+        
+        /* 状态提示 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: #333;
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        .toast.show {
+            transform: translateX(0);
+        }
+        .toast.success { background: #4caf50; }
+        .toast.error { background: #f44336; }
+        .toast.info { background: #2196f3; }
+        
+        /* 加载动画 */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🔑 API Key 管理</h1>
+            <div class="header-actions">
+                <a href="index.html" class="header-btn secondary">⬅️ 返回首页</a>
+                <button class="header-btn primary" onclick="exportConfig()">📤 导出配置</button>
+                <button class="header-btn primary" onclick="document.getElementById('importInput').click()">📥 导入配置</button>
+                <input type="file" id="importInput" accept=".json" style="display: none;" onchange="importConfig(event)">
+            </div>
+        </div>
+        
+        <!-- 内容 -->
+        <div class="content">
+            <!-- 添加 API Key -->
+            <div class="section">
+                <h2 class="section-title">➕ 添加 API Key</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>模型供应商 <span style="color: #f44336;">*</span></label>
+                        <select id="provider">
+                            <option value="">请选择供应商</option>
+                            <optgroup label="官方平台">
+                                <option value="openai">OpenAI (GPT-4/GPT-4o)</option>
+                                <option value="anthropic">Anthropic (Claude-3)</option>
+                                <option value="zhipu">智谱 AI</option>
+                                <option value="moonshot">月之暗面 (Kimi)</option>
+                                <option value="alibaba">通义千问 (Qwen)</option>
+                                <option value="deepseek">DeepSeek</option>
+                                <option value="baichuan">百川智能</option>
+                                <option value="minimax">MiniMax</option>
+                            </optgroup>
+                            <optgroup label="代理平台（自动检测）">
+                                <option value="proxy-auto">🔍 自动检测（推荐）</option>
+                            </optgroup>
+                            <optgroup label="常见代理平台">
+                                <option value="one-api">One-API</option>
+                                <option value="api2d">API2D</option>
+                                <option value="closeai">CloseAI</option>
+                                <option value="simple-api">Simple-API</option>
+                            </optgroup>
+                            <optgroup label="其他">
+                                <option value="custom">🔧 自定义端点</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>默认模型</label>
+                        <input type="text" id="model" placeholder="自动填充，可修改">
+                    </div>
+                </div>
+                
+                <!-- API 端点输入（仅自定义需要） -->
+                <div class="form-row" id="customEndpointRow" style="display: none;">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>🔗 API 端点</label>
+                        <input type="text" id="customBaseUrl" placeholder="例如：https://api.your-proxy.com/v1">
+                        <div class="hint">💡 提示：如果不知道端点，请选择「自动检测」或上面的常见平台</div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>API Key <span style="color: #f44336;">*</span></label>
+                        <input type="password" id="apiKey" placeholder="请输入 API Key（通常以 sk- 开头）">
+                        <div class="hint">💡 提示：API Key 会加密存储在本地浏览器中</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>备注</label>
+                        <input type="text" id="note" placeholder="例如：我的代理平台 Key">
+                    </div>
+                </div>
+                
+                <div>
+                    <button class="btn btn-primary" id="testBtn" onclick="testConnection()">🔌 测试连接</button>
+                    <button class="btn btn-success" id="saveBtn" onclick="saveKey()">💾 保存配置</button>
+                    <button class="btn btn-secondary" onclick="resetForm()">🔄 重置</button>
+                </div>
+            </div>
+            
+            <!-- API Key 列表 -->
+            <div class="section">
+                <h2 class="section-title">📋 我的 API Key 列表</h2>
+                <div id="keyList" class="key-list">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 使用说明 -->
+            <div class="section help-section">
+                <h2 class="section-title">❓ 如何获取 API Key</h2>
+                <ul>
+                    <li><strong>OpenAI:</strong> <a href="https://platform.openai.com/api-keys" target="_blank">https://platform.openai.com/api-keys</a></li>
+                    <li><strong>Anthropic:</strong> <a href="https://console.anthropic.com/settings/keys" target="_blank">https://console.anthropic.com/settings/keys</a></li>
+                    <li><strong>智谱 AI:</strong> <a href="https://open.bigmodel.cn/" target="_blank">https://open.bigmodel.cn/</a></li>
+                    <li><strong>月之暗面:</strong> <a href="https://platform.moonshot.cn/" target="_blank">https://platform.moonshot.cn/</a></li>
+                    <li><strong>通义千问:</strong> <a href="https://dashscope.aliyun.com/" target="_blank">https://dashscope.aliyun.com/</a></li>
+                    <li><strong>DeepSeek:</strong> <a href="https://platform.deepseek.com/" target="_blank">https://platform.deepseek.com/</a></li>
+                </ul>
+                <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 8px;">
+                    <strong>💡 提示：</strong>
+                    <ul style="margin-top: 8px; padding-left: 20px;">
+                        <li>API Key 请妥善保管，不要泄露给他人</li>
+                        <li>建议为不同用途创建不同的 Key（如：开发/生产）</li>
+                        <li>定期更换 Key 以提高安全性</li>
+                        <li>可以使用「导出配置」功能备份你的配置</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 状态提示 -->
+    <div id="toast" class="toast"></div>
+
+    <script src="js/config-manager.js"></script>
+    <script src="js/ai-providers.js"></script>
+    <script>
+        // 页面加载时渲染列表
+        document.addEventListener('DOMContentLoaded', () => {
+            renderKeyList();
+            setupProviderChange();
+        });
+        
+        // 常见代理平台预设端点
+        const PROXY_PLATFORMS = {
+            'one-api': {
+                name: 'One-API',
+                endpoints: [
+                    'https://api.one-api.com/v1',
+                    'https://one-api.vercel.app/v1'
+                ],
+                defaultModel: 'glm-4'
+            },
+            'api2d': {
+                name: 'API2D',
+                endpoints: ['https://openai.api2d.net/v1'],
+                defaultModel: 'gpt-4'
+            },
+            'closeai': {
+                name: 'CloseAI',
+                endpoints: ['https://api.closeai-asia.com/v1'],
+                defaultModel: 'gpt-4'
+            },
+            'simple-api': {
+                name: 'Simple-API',
+                endpoints: ['https://api.simple-api.com/v1'],
+                defaultModel: 'glm-4'
+            }
+        };
+
+        // 供应商变更时自动填充默认模型
+        function setupProviderChange() {
+            document.getElementById('provider').addEventListener('change', (e) => {
+                const provider = e.target.value;
+                const modelInput = document.getElementById('model');
+                const customEndpointRow = document.getElementById('customEndpointRow');
+                
+                // 显示/隐藏自定义端点输入
+                if (provider === 'custom') {
+                    customEndpointRow.style.display = 'grid';
+                    modelInput.value = '';
+                    modelInput.placeholder = '例如：glm-4, gpt-4, qwen-plus 等';
+                } else if (provider === 'proxy-auto') {
+                    customEndpointRow.style.display = 'none';
+                    modelInput.value = '';
+                    modelInput.placeholder = '例如：glm-4, gpt-4（会自动检测）';
+                } else if (PROXY_PLATFORMS[provider]) {
+                    customEndpointRow.style.display = 'none';
+                    modelInput.value = PROXY_PLATFORMS[provider].defaultModel;
+                    modelInput.placeholder = '自动填充，可修改';
+                } else {
+                    customEndpointRow.style.display = 'none';
+                    const defaultModel = AI_PROVIDERS[provider]?.model || '';
+                    modelInput.value = defaultModel;
+                    modelInput.placeholder = '自动填充，可修改';
+                }
+            });
+        }
+        
+        // 渲染 Key 列表
+        function renderKeyList() {
+            const container = document.getElementById('keyList');
+            const keys = configManager.getApiKeys();
+            
+            if (keys.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔑</div>
+                        <div>暂无 API Key 配置</div>
+                        <div style="margin-top: 10px; font-size: 13px;">点击上方「添加 API Key」开始配置</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = keys.map(key => {
+                // 获取显示名称
+                let displayName = getProviderName(key.provider);
+                let isProxy = false;
+                
+                if (key.provider === 'proxy-auto') {
+                    displayName = '🔍 自动检测';
+                    isProxy = true;
+                } else if (PROXY_PLATFORMS[key.provider]) {
+                    displayName = PROXY_PLATFORMS[key.provider].name;
+                    isProxy = true;
+                } else if (key.provider === 'custom') {
+                    displayName = '自定义平台';
+                    isProxy = true;
+                }
+                
+                return `
+                <div class="key-item">
+                    <div class="key-icon">${getProviderIcon(key.provider)}</div>
+                    <div class="key-info">
+                        <div class="key-name">
+                            ${displayName}
+                            ${isProxy ? '<span style="background: #ff9800; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">代理</span>' : ''}
+                            <span style="color: #999; font-weight: normal;">(${key.model})</span>
+                            ${key.isDefault ? '<span style="color: #667eea; margin-left: 8px;">⭐ 默认</span>' : ''}
+                        </div>
+                        <div class="key-meta">
+                            ${key.note || '无备注'} · 
+                            ${key.customBaseUrl ? `端点：${key.customBaseUrl.replace(/https?:\/\//, '').replace(/\/v1$/, '')} · ` : ''}
+                            Key: ${maskKey(key.encryptedKey)} · 
+                            最后使用：${formatLastUsed(key.lastUsed)}
+                        </div>
+                    </div>
+                    <div class="key-actions">
+                        ${!key.isDefault ? `<button class="btn btn-secondary" onclick="setDefaultKey('${key.id}')">设为默认</button>` : ''}
+                        <button class="btn btn-secondary" onclick="editKey('${key.id}')">✏️ 编辑</button>
+                        <button class="btn btn-danger" onclick="deleteKey('${key.id}')">🗑️ 删除</button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+        
+        // 获取供应商标识
+        function getProviderIcon(provider) {
+            const icons = {
+                openai: '🟢',
+                anthropic: '🟠',
+                zhipu: '🔵',
+                moonshot: '🌙',
+                alibaba: '🟡',
+                deepseek: '🟣',
+                baichuan: '⚪',
+                minimax: '🔴'
+            };
+            return icons[provider] || '⚫';
+        }
+        
+        // 获取供应商名称
+        function getProviderName(provider) {
+            const names = {
+                openai: 'OpenAI',
+                anthropic: 'Anthropic',
+                zhipu: '智谱 AI',
+                moonshot: '月之暗面',
+                alibaba: '通义千问',
+                deepseek: 'DeepSeek',
+                baichuan: '百川智能',
+                minimax: 'MiniMax'
+            };
+            return names[provider] || provider;
+        }
+        
+        // 掩码显示 Key
+        function maskKey(encryptedKey) {
+            try {
+                const key = configManager.decryptKey(encryptedKey);
+                return key.substring(0, 6) + '••••' + key.substring(key.length - 4);
+            } catch {
+                return '••••••••';
+            }
+        }
+        
+        // 格式化最后使用时间
+        function formatLastUsed(timestamp) {
+            if (!timestamp) return '从未使用';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+            if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+            return date.toLocaleDateString('zh-CN');
+        }
+        
+        // 测试连接
+        async function testConnection() {
+            const provider = document.getElementById('provider').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const model = document.getElementById('model').value;
+            const customBaseUrl = document.getElementById('customBaseUrl').value;
+            
+            if (!provider || !apiKey) {
+                showToast('请选择供应商并输入 API Key', 'error');
+                return;
+            }
+            
+            if (provider === 'custom' && !customBaseUrl) {
+                showToast('自定义平台请填写 API 端点', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('testBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>测试中...';
+            
+            try {
+                let result;
+                
+                // 自动检测模式
+                if (provider === 'proxy-auto') {
+                    result = await aiProviders.autoDetectProxy(apiKey, model);
+                } 
+                // 常见代理平台
+                else if (PROXY_PLATFORMS[provider]) {
+                    const endpoints = PROXY_PLATFORMS[provider].endpoints;
+                    result = await aiProviders.tryMultipleEndpoints(endpoints, apiKey, model);
+                }
+                // 自定义或官方平台
+                else {
+                    result = await aiProviders.testConnection(provider, apiKey, model, customBaseUrl);
+                }
+                
+                if (result.success) {
+                    const providerName = result.detectedProvider || getProviderName(provider);
+                    showToast(`✅ 连接成功！${providerName}`, 'success');
+                } else {
+                    showToast('❌ 连接失败：' + (result.error || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showToast('❌ 测试失败：' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🔌 测试连接';
+            }
+        }
+        
+        // 保存 Key
+        function saveKey() {
+            const provider = document.getElementById('provider').value;
+            const model = document.getElementById('model').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const note = document.getElementById('note').value;
+            const customBaseUrl = document.getElementById('customBaseUrl').value;
+            
+            if (!provider || !apiKey) {
+                showToast('请填写供应商和 API Key', 'error');
+                return;
+            }
+            
+            if (provider === 'custom' && !customBaseUrl) {
+                showToast('自定义平台请填写 API 端点', 'error');
+                return;
+            }
+            
+            // 如果是代理平台，保存预设端点
+            let savedBaseUrl = null;
+            if (provider === 'custom') {
+                savedBaseUrl = customBaseUrl;
+            } else if (PROXY_PLATFORMS[provider]) {
+                savedBaseUrl = PROXY_PLATFORMS[provider].endpoints[0];
+            }
+            
+            const keyData = {
+                provider,
+                model: model || '',
+                note,
+                customBaseUrl: savedBaseUrl,
+                isDefault: false
+            };
+            
+            configManager.addApiKey(keyData);
+            showToast('✅ 配置已保存', 'success');
+            resetForm();
+            renderKeyList();
+        }
+        
+        // 设为默认
+        function setDefaultKey(keyId) {
+            configManager.setDefaultKey(keyId);
+            showToast('✅ 已设为默认', 'success');
+            renderKeyList();
+        }
+        
+        // 编辑 Key
+        function editKey(keyId) {
+            const key = configManager.getApiKey(keyId);
+            if (!key) return;
+            
+            const provider = key.provider;
+            document.getElementById('provider').value = provider;
+            document.getElementById('model').value = key.model;
+            document.getElementById('note').value = key.note || '';
+            document.getElementById('apiKey').value = configManager.decryptKey(key.encryptedKey);
+            
+            // 显示自定义端点（如果是代理平台）
+            const customEndpointRow = document.getElementById('customEndpointRow');
+            if (provider === 'custom') {
+                customEndpointRow.style.display = 'grid';
+                document.getElementById('customBaseUrl').value = key.customBaseUrl || '';
+            } else {
+                customEndpointRow.style.display = 'none';
+            }
+            
+            // 保存编辑模式
+            window.editingKeyId = keyId;
+            document.getElementById('saveBtn').textContent = '💾 更新配置';
+            document.getElementById('saveBtn').onclick = updateKey;
+            
+            showToast('已进入编辑模式', 'info');
+        }
+        
+        // 更新 Key
+        function updateKey() {
+            if (!window.editingKeyId) return;
+            
+            const provider = document.getElementById('provider').value;
+            const model = document.getElementById('model').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const note = document.getElementById('note').value;
+            const customBaseUrl = document.getElementById('customBaseUrl').value;
+            
+            if (!provider || !apiKey) {
+                showToast('请填写供应商和 API Key', 'error');
+                return;
+            }
+            
+            if (provider === 'custom' && !customBaseUrl) {
+                showToast('自定义平台请填写 API 端点', 'error');
+                return;
+            }
+            
+            const keyData = {
+                provider,
+                model: model || '',
+                note,
+                customBaseUrl: provider === 'custom' ? customBaseUrl : null
+            };
+            
+            configManager.updateApiKey(window.editingKeyId, keyData);
+            showToast('✅ 配置已更新', 'success');
+            resetForm();
+            renderKeyList();
+        }
+        
+        // 删除 Key
+        function deleteKey(keyId) {
+            if (!confirm('确定要删除这个 API Key 配置吗？')) return;
+            
+            configManager.deleteApiKey(keyId);
+            showToast('✅ 配置已删除', 'success');
+            renderKeyList();
+        }
+        
+        // 重置表单
+        function resetForm() {
+            document.getElementById('provider').value = '';
+            document.getElementById('model').value = '';
+            document.getElementById('apiKey').value = '';
+            document.getElementById('note').value = '';
+            
+            window.editingKeyId = null;
+            document.getElementById('saveBtn').textContent = '💾 保存配置';
+            document.getElementById('saveBtn').onclick = saveKey;
+        }
+        
+        // 导出配置
+        function exportConfig() {
+            const data = configManager.exportConfig();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `api-key-config-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('✅ 配置已导出', 'success');
+        }
+        
+        // 导入配置
+        function importConfig(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    configManager.importConfig(data);
+                    showToast('✅ 配置已导入', 'success');
+                    renderKeyList();
+                } catch (error) {
+                    showToast('❌ 配置文件格式错误', 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+        
+        // 显示提示
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

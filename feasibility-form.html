@@ -468,11 +468,56 @@
         </div>
     </div>
 
+    <script src="js/ai-assistant.js"></script>
     <script>
         // 表单状态
         let formState = {
             totalFields: 10
         };
+
+        // 页面加载完成后添加智能建议按钮
+        document.addEventListener('DOMContentLoaded', () => {
+            // 为关键字段添加智能建议按钮
+            AIAssistant.attachSuggestionButton(
+                'projectBackground',
+                '项目背景',
+                () => document.getElementById('projectName')?.value || ''
+            );
+
+            AIAssistant.attachSuggestionButton(
+                'hwTechBase',
+                '硬件技术基础',
+                () => '项目名称：' + (document.getElementById('projectName')?.value || '')
+            );
+
+            AIAssistant.attachSuggestionButton(
+                'swTechBase',
+                '软件技术基础',
+                () => '项目名称：' + (document.getElementById('projectName')?.value || '')
+            );
+
+            AIAssistant.attachSuggestionButton(
+                'mechTechBase',
+                '结构技术基础',
+                () => '项目名称：' + (document.getElementById('projectName')?.value || '')
+            );
+
+            AIAssistant.attachSuggestionButton(
+                'marketDemand',
+                '市场需求分析',
+                () => '项目背景：' + (document.getElementById('projectBackground')?.value || '')
+            );
+
+            AIAssistant.attachSuggestionButton(
+                'conclusion',
+                '可行性结论',
+                () => `
+                  技术基础：${document.getElementById('hwTechBase')?.value || ''}
+                  市场需求：${document.getElementById('marketDemand')?.value || ''}
+                  预算：${document.getElementById('budget')?.value || ''}
+                `
+            );
+        });
 
         // 应用模板
         function applyTemplate(field) {

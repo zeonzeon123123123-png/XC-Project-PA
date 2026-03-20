@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Key Manager Pro - 增强版</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container { max-width: 1600px; margin: 0 auto; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-actions { display: flex; gap: 1rem; }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--primary); }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); }
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            color: var(--text-muted);
+        }
+        .tab:hover { color: var(--text); }
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title { font-size: 1.1rem; font-weight: 600; }
+
+        .provider-badge {
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .badge-direct { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
+        .badge-proxy { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+
+        .key-list { display: flex; flex-direction: column; gap: 0.8rem; }
+
+        .key-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .key-info { flex: 1; }
+        .key-name { font-weight: 500; margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.5rem; }
+        .key-id { font-family: 'Monaco', 'Consolas', monospace; font-size: 0.85rem; color: var(--text-muted); }
+        .key-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; }
+        .key-actions { display: flex; gap: 0.5rem; }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-active { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .status-inactive { background: var(--text-muted); }
+        .status-error { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+        .status-checking { background: var(--warning); animation: pulse 1s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .usage-bar {
+            height: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .usage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
+            transition: width 0.3s;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .stat-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid var(--border);
+        }
+        .modal-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 1.5rem; }
+        .form-group { margin-bottom: 1.2rem; }
+        .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 0.7rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+        .form-input:focus, .form-select:focus { outline: none; border-color: var(--primary); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 0.8rem; margin-top: 1.5rem; }
+
+        .alert-banner {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .alert-warning { background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning); color: var(--warning); }
+        .alert-success { background: rgba(34, 197, 94, 0.1); border: 1px solid var(--success); color: var(--success); }
+        .alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); }
+        .hidden { display: none !important; }
+
+        .log-list { max-height: 400px; overflow-y: auto; }
+        .log-item {
+            padding: 0.8rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+        }
+        .log-time { color: var(--text-muted); min-width: 150px; }
+        .log-action { color: var(--primary); min-width: 100px; }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+        .storage-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .provider-actions {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .refresh-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.3rem;
+            font-size: 1.2rem;
+        }
+        .refresh-btn:hover { color: var(--primary); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔑 API Key Manager Pro</h1>
+            <div class="header-actions">
+                <div class="storage-status">
+                    <span id="storageIndicator">💾 LocalStorage</span>
+                    <button class="btn btn-outline btn-sm" onclick="exportConfig()">📤 导出</button>
+                    <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">📥 导入</button>
+                    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importConfig(event)">
+                </div>
+                <button class="btn btn-primary" onclick="showAddProviderModal()">➕ 添加 Provider</button>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('providers')">📋 Provider 列表</div>
+            <div class="tab" onclick="switchTab('usage')">📊 用量监控</div>
+            <div class="tab" onclick="switchTab('logs')">📜 操作日志</div>
+            <div class="tab" onclick="switchTab('settings')">⚙️ 设置</div>
+        </div>
+
+        <!-- 告警横幅 -->
+        <div id="alertBanner" class="alert-banner alert-success hidden"></div>
+
+        <!-- Provider 列表 -->
+        <div id="providersTab" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Provider 总数</div>
+                    <div class="stat-value" id="totalProviders">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">API Key 总数</div>
+                    <div class="stat-value" id="totalKeys">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">活跃 Key</div>
+                    <div class="stat-value" id="activeKeys">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">异常 Key</div>
+                    <div class="stat-value" id="errorKeys" style="color: var(--danger)">0</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <h2>Provider 配置</h2>
+                <button class="btn btn-outline" onclick="checkAllStatus()">🔍 全部检测状态</button>
+            </div>
+
+            <div class="grid" id="providersGrid">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔄</div>
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 用量监控 -->
+        <div id="usageTab" class="tab-content">
+            <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <h2>用量监控</h2>
+                <button class="btn btn-outline" onclick="refreshAllUsage()">🔄 刷新用量</button>
+            </div>
+            <div class="grid" id="usageGrid">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📊</div>
+                    <p>点击"刷新用量"查看各 Provider 用量情况</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作日志 -->
+        <div id="logsTab" class="tab-content">
+            <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <h2>操作日志</h2>
+                <button class="btn btn-outline" onclick="clearLogs()">🗑️ 清空日志</button>
+            </div>
+            <div class="card">
+                <div class="log-list" id="logList"></div>
+            </div>
+        </div>
+
+        <!-- 设置 -->
+        <div id="settingsTab" class="tab-content">
+            <div class="card" style="max-width: 600px;">
+                <h2 style="margin-bottom: 1.5rem;">⚙️ 告警设置</h2>
+                <div class="form-group">
+                    <label class="form-label">全局告警阈值 (%)</label>
+                    <input type="number" class="form-input" id="globalThreshold" value="80" min="0" max="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="alertsEnabled" checked> 启用告警
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">自动检测间隔 (分钟)</label>
+                    <input type="number" class="form-input" id="autoCheckInterval" value="30" min="5" max="1440">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="autoCheckEnabled"> 启用自动状态检测
+                    </label>
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings()">💾 保存设置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加 Provider 模态框 -->
+    <div id="addProviderModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-title">➕ 添加 Provider</div>
+            <div class="form-group">
+                <label class="form-label">Provider ID *</label>
+                <input type="text" class="form-input" id="newProviderId" placeholder="例如：qwen, glm, openai">
+                <div class="form-group-hint" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem;">
+                    建议使用小写字母和连字符
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">显示名称</label>
+                <input type="text" class="form-input" id="newProviderName" placeholder="例如：阿里云 Qwen">
+            </div>
+            <div class="form-group">
+                <label class="form-label">类型 *</label>
+                <select class="form-select" id="newProviderType">
+                    <option value="direct">直连 (Direct)</option>
+                    <option value="proxy">代理平台 (Proxy)</option>
+                </select>
+            </div>
+            <div class="form-group" id="baseUrlGroup">
+                <label class="form-label">Base URL</label>
+                <input type="text" class="form-input" id="newProviderBaseUrl" placeholder="https://api.example.com/v1">
+            </div>
+            <div class="form-group">
+                <label class="form-label">支持能力</label>
+                <select class="form-select" id="newProviderCapabilities" multiple style="height: 100px;">
+                    <option value="text">文本</option>
+                    <option value="image">图像</option>
+                    <option value="audio">音频</option>
+                    <option value="video">视频</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="hideModal('addProviderModal')">取消</button>
+                <button class="btn btn-primary" onclick="addProvider()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加密钥模态框 -->
+    <div id="addKeyModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-title">🔑 添加 API Key</div>
+            <div class="form-group">
+                <label class="form-label">Provider</label>
+                <input type="text" class="form-input" id="addKeyProvider" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">密钥名称</label>
+                <input type="text" class="form-input" id="addKeyName" placeholder="例如：主密钥">
+            </div>
+            <div class="form-group">
+                <label class="form-label">API Key *</label>
+                <input type="password" class="form-input" id="addKeyValue" placeholder="sk-...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" id="addKeyVerify" checked> 添加后自动验证
+                </label>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="hideModal('addKeyModal')">取消</button>
+                <button class="btn btn-primary" onclick="addKey()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 轮换密钥模态框 -->
+    <div id="rotateKeyModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-title">🔄 轮换 API Key</div>
+            <div class="alert-banner alert-warning">
+                ⚠️ 轮换后请确保新密钥已生效，旧密钥将失效
+            </div>
+            <div class="form-group">
+                <label class="form-label">Provider</label>
+                <input type="text" class="form-input" id="rotateKeyProvider" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">当前密钥</label>
+                <input type="text" class="form-input" id="rotateKeyId" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">新 API Key *</label>
+                <input type="password" class="form-input" id="rotateKeyValue" placeholder="输入新密钥">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="hideModal('rotateKeyModal')">取消</button>
+                <button class="btn btn-primary" onclick="rotateKey()">确认轮换</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 配置管理 ====================
+        const STORAGE_KEY = 'api_key_manager_config';
+        const USAGE_KEY = 'api_key_manager_usage';
+        const LOGS_KEY = 'api_key_manager_logs';
+        
+        // 预定义 Provider 模板（基于实际使用的 API）
+        const PROVIDER_TEMPLATES = {
+            qwen: { name: '阿里云 Qwen', type: 'direct', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', capabilities: ['text', 'image'] },
+            glm: { name: '智谱 GLM', type: 'direct', baseUrl: 'https://open.bigmodel.cn/api/paas/v4', capabilities: ['text', 'image'] },
+            proxy: { name: '代理平台', type: 'proxy', baseUrl: '', capabilities: ['text', 'image'] },
+            openrouter: { name: 'OpenRouter', type: 'proxy', baseUrl: 'https://openrouter.ai/api/v1', capabilities: ['text', 'image'] },
+            siliconflow: { name: 'SiliconFlow', type: 'proxy', baseUrl: 'https://api.siliconflow.cn/v1', capabilities: ['text', 'image'] },
+            openai: { name: 'OpenAI', type: 'direct', baseUrl: 'https://api.openai.com/v1', capabilities: ['text', 'image'] },
+            anthropic: { name: 'Anthropic', type: 'direct', baseUrl: 'https://api.anthropic.com', capabilities: ['text'] },
+            yolo: { name: 'YOLO-World', type: 'direct', baseUrl: 'https://model.cnfcloud.com/Yolov8x-worldv2/v1', capabilities: ['image'] }
+        };
+
+        let currentConfig = null;
+        let currentProvider = null;
+        let currentKeyId = null;
+
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            
+            document.getElementById('newProviderType').addEventListener('change', (e) => {
+                document.getElementById('baseUrlGroup').classList.toggle('hidden', e.target.value !== 'proxy');
+            });
+        });
+
+        // ==================== 存储管理 ====================
+        function loadConfig() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    currentConfig = JSON.parse(saved);
+                } else {
+                    // 初始化默认配置
+                    currentConfig = {
+                        providers: {},
+                        alerts: { enabled: true, globalThreshold: 80, autoCheckInterval: 30, autoCheckEnabled: false },
+                        lastUpdated: new Date().toISOString()
+                    };
+                    // 预置常用 Provider
+                    Object.entries(PROVIDER_TEMPLATES).forEach(([id, template]) => {
+                        currentConfig.providers[id] = {
+                            ...template,
+                            keys: [],
+                            alertThreshold: 80
+                        };
+                    });
+                    saveConfig();
+                }
+                renderProviders();
+                updateStats();
+                loadLogs();
+            } catch (e) {
+                console.error('加载配置失败:', e);
+                showAlert('加载配置失败，使用默认配置', 'error');
+            }
+        }
+
+        function saveConfig() {
+            currentConfig.lastUpdated = new Date().toISOString();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(currentConfig));
+            logAction('config.save', '保存配置');
+        }
+
+        // ==================== 渲染 ====================
+        function renderProviders() {
+            const grid = document.getElementById('providersGrid');
+            const providers = currentConfig.providers || {};
+            
+            if (Object.keys(providers).length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">🔑</div>
+                        <p>暂无 Provider，点击上方"添加 Provider"开始</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = Object.entries(providers).map(([id, provider]) => {
+                const activeKeys = provider.keys.filter(k => k.status === 'active').length;
+                const errorKeys = provider.keys.filter(k => k.status === 'error').length;
+                
+                return `
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">${provider.name}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem;">${id}</div>
+                            </div>
+                            <span class="provider-badge badge-${provider.type}">${provider.type}</span>
+                        </div>
+                        
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                            Base URL: <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">${provider.baseUrl || '-'}</code>
+                        </div>
+                        
+                        <div class="key-list">
+                            ${provider.keys.length === 0 ? 
+                                '<div style="color: var(--text-muted); font-size: 0.9rem;">暂无密钥</div>' :
+                                provider.keys.map(key => `
+                                    <div class="key-item">
+                                        <div class="key-info">
+                                            <div class="key-name">
+                                                <span class="status-indicator status-${key.status || 'inactive'}" title="${getStatusText(key.status)}"></span>
+                                                ${key.name}
+                                                <button class="refresh-btn" onclick="checkKeyStatus('${id}', '${key.id}')" title="检测状态">🔍</button>
+                                            </div>
+                                            <div class="key-id">${maskKey(key.id)}</div>
+                                            <div class="key-meta">
+                                                创建于 ${new Date(key.createdAt).toLocaleDateString('zh-CN')}
+                                                ${key.lastRotated ? '· 最后轮换 ' + new Date(key.lastRotated).toLocaleDateString('zh-CN') : ''}
+                                                ${key.lastChecked ? '· 检测 ' + new Date(key.lastChecked).toLocaleDateString('zh-CN') : ''}
+                                            </div>
+                                            ${key.usage ? `
+                                                <div class="usage-bar">
+                                                    <div class="usage-fill" style="width: ${Math.min(100, (key.usage / (key.budget || 100)) * 100)}%"></div>
+                                                </div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem;">
+                                                    已用 $${key.usage} / $${key.budget || 100}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                        <div class="key-actions">
+                                            <button class="btn btn-outline btn-sm" onclick="showRotateKeyModal('${id}', '${key.id}')">🔄</button>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteKey('${id}', '${key.id}')">🗑️</button>
+                                        </div>
+                                    </div>
+                                `).join('')
+                            }
+                        </div>
+                        
+                        <div class="provider-actions">
+                            <button class="btn btn-primary btn-sm" onclick="showAddKeyModal('${id}')">➕ 添加密钥</button>
+                            <button class="btn btn-outline btn-sm" onclick="checkProviderStatus('${id}')">🔍 检测全部</button>
+                            <button class="btn btn-outline btn-sm" onclick="checkProviderUsage('${id}')">📊 查看用量</button>
+                            <button class="btn btn-outline btn-sm" onclick="deleteProvider('${id}')" style="margin-left: auto;">删除 Provider</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            const providers = currentConfig.providers || {};
+            let totalKeys = 0, activeKeys = 0, errorKeys = 0;
+            
+            Object.values(providers).forEach(p => {
+                totalKeys += p.keys.length;
+                activeKeys += p.keys.filter(k => k.status === 'active').length;
+                errorKeys += p.keys.filter(k => k.status === 'error').length;
+            });
+            
+            document.getElementById('totalProviders').textContent = Object.keys(providers).length;
+            document.getElementById('totalKeys').textContent = totalKeys;
+            document.getElementById('activeKeys').textContent = activeKeys;
+            document.getElementById('errorKeys').textContent = errorKeys;
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                active: '活跃',
+                inactive: '未检测',
+                error: '异常',
+                checking: '检测中'
+            };
+            return texts[status] || status;
+        }
+
+        function maskKey(key) {
+            if (!key || key.length < 10) return '***';
+            return key.substring(0, 6) + '...' + key.substring(key.length - 4);
+        }
+
+        // ==================== Provider 操作 ====================
+        function showAddProviderModal() {
+            document.getElementById('newProviderId').value = '';
+            document.getElementById('newProviderName').value = '';
+            document.getElementById('newProviderType').value = 'direct';
+            document.getElementById('newProviderBaseUrl').value = '';
+            showModal('addProviderModal');
+        }
+
+        async function addProvider() {
+            const id = document.getElementById('newProviderId').value.trim().toLowerCase();
+            const name = document.getElementById('newProviderName').value.trim() || id;
+            const type = document.getElementById('newProviderType').value;
+            const baseUrl = document.getElementById('newProviderBaseUrl').value.trim();
+            
+            if (!id) {
+                showAlert('请输入 Provider ID', 'error');
+                return;
+            }
+            
+            if (currentConfig.providers[id]) {
+                showAlert('Provider ID 已存在', 'error');
+                return;
+            }
+            
+            currentConfig.providers[id] = {
+                name, type, baseUrl,
+                keys: [],
+                alertThreshold: currentConfig.alerts?.globalThreshold || 80,
+                capabilities: []
+            };
+            
+            saveConfig();
+            renderProviders();
+            updateStats();
+            showAlert(`Provider "${name}" 已添加`, 'success');
+            hideModal('addProviderModal');
+            logAction('provider.add', `添加 Provider: ${id}`);
+        }
+
+        async function deleteProvider(id) {
+            if (!confirm(`确定要删除 Provider "${id}" 吗？这将删除所有相关密钥。`)) return;
+            
+            delete currentConfig.providers[id];
+            saveConfig();
+            renderProviders();
+            updateStats();
+            showAlert('Provider 已删除', 'success');
+            logAction('provider.delete', `删除 Provider: ${id}`);
+        }
+
+        // ==================== Key 操作 ====================
+        function showAddKeyModal(providerId) {
+            currentProvider = providerId;
+            document.getElementById('addKeyProvider').value = providerId;
+            document.getElementById('addKeyName').value = '';
+            document.getElementById('addKeyValue').value = '';
+            showModal('addKeyModal');
+        }
+
+        async function addKey() {
+            const provider = currentProvider;
+            const name = document.getElementById('addKeyName').value.trim() || '默认';
+            const key = document.getElementById('addKeyValue').value.trim();
+            const verify = document.getElementById('addKeyVerify').checked;
+            
+            if (!key) {
+                showAlert('请输入 API Key', 'error');
+                return;
+            }
+            
+            const keyId = key.substring(0, 10) + '_' + Date.now();
+            
+            currentConfig.providers[provider].keys.push({
+                id: keyId,
+                name,
+                key,
+                status: verify ? 'checking' : 'inactive',
+                createdAt: new Date().toISOString(),
+                usage: 0,
+                budget: 100
+            });
+            
+            saveConfig();
+            renderProviders();
+            updateStats();
+            showAlert('密钥已添加', 'success');
+            hideModal('addKeyModal');
+            logAction('key.add', `添加密钥到 ${provider}: ${maskKey(keyId)}`);
+            
+            if (verify) {
+                setTimeout(() => checkKeyStatus(provider, keyId), 500);
+            }
+        }
+
+        async function deleteKey(provider, keyId) {
+            if (!confirm(`确定要删除密钥吗？`)) return;
+            
+            const provider_config = currentConfig.providers[provider];
+            provider_config.keys = provider_config.keys.filter(k => k.id !== keyId);
+            
+            saveConfig();
+            renderProviders();
+            updateStats();
+            showAlert('密钥已删除', 'success');
+            logAction('key.delete', `删除密钥 from ${provider}: ${maskKey(keyId)}`);
+        }
+
+        function showRotateKeyModal(provider, keyId) {
+            currentProvider = provider;
+            currentKeyId = keyId;
+            document.getElementById('rotateKeyProvider').value = provider;
+            document.getElementById('rotateKeyId').value = maskKey(keyId);
+            document.getElementById('rotateKeyValue').value = '';
+            showModal('rotateKeyModal');
+        }
+
+        async function rotateKey() {
+            const newKey = document.getElementById('rotateKeyValue').value.trim();
+            
+            if (!newKey) {
+                showAlert('请输入新 API Key', 'error');
+                return;
+            }
+            
+            const provider_config = currentConfig.providers[currentProvider];
+            const keyIndex = provider_config.keys.findIndex(k => k.id === currentKeyId);
+            
+            if (keyIndex === -1) {
+                showAlert('密钥不存在', 'error');
+                return;
+            }
+            
+            provider_config.keys[keyIndex].key = newKey;
+            provider_config.keys[keyIndex].lastRotated = new Date().toISOString();
+            provider_config.keys[keyIndex].status = 'checking';
+            
+            saveConfig();
+            renderProviders();
+            showAlert('密钥已轮换，正在验证...', 'success');
+            hideModal('rotateKeyModal');
+            logAction('key.rotate', `轮换密钥 ${currentProvider}: ${maskKey(currentKeyId)}`);
+            
+            setTimeout(() => checkKeyStatus(currentProvider, currentKeyId), 500);
+        }
+
+        // ==================== 状态检测 ====================
+        async function checkKeyStatus(provider, keyId) {
+            const provider_config = currentConfig.providers[provider];
+            const key = provider_config.keys.find(k => k.id === keyId);
+            
+            if (!key) return;
+            
+            key.status = 'checking';
+            renderProviders();
+            
+            try {
+                // 模拟 API 检测（实际使用时需要根据不同 Provider 实现真实检测）
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // 简单的密钥格式验证
+                if (key.key && key.key.length > 10) {
+                    key.status = 'active';
+                    key.lastChecked = new Date().toISOString();
+                    showAlert(`${provider} 密钥验证成功`, 'success');
+                    logAction('key.check', `验证成功 ${provider}: ${maskKey(keyId)}`);
+                } else {
+                    key.status = 'error';
+                    key.lastChecked = new Date().toISOString();
+                    showAlert(`${provider} 密钥验证失败`, 'error');
+                    logAction('key.check', `验证失败 ${provider}: ${maskKey(keyId)}`);
+                }
+            } catch (e) {
+                key.status = 'error';
+                showAlert(`检测失败：${e.message}`, 'error');
+            }
+            
+            saveConfig();
+            renderProviders();
+            updateStats();
+        }
+
+        async function checkProviderStatus(providerId) {
+            const provider_config = currentConfig.providers[providerId];
+            
+            for (const key of provider_config.keys) {
+                await checkKeyStatus(providerId, key.id);
+            }
+            
+            showAlert(`${providerId} 全部密钥检测完成`, 'success');
+        }
+
+        async function checkAllStatus() {
+            const providers = Object.keys(currentConfig.providers);
+            
+            for (const providerId of providers) {
+                await checkProviderStatus(providerId);
+            }
+            
+            showAlert('所有 Provider 状态检测完成', 'success');
+        }
+
+        // ==================== 用量监控 ====================
+        async function refreshAllUsage() {
+            const usageGrid = document.getElementById('usageGrid');
+            usageGrid.innerHTML = '<div class="empty-state">🔄 正在刷新用量...</div>';
+            
+            const providers = currentConfig.providers || {};
+            let html = '';
+            
+            for (const [id, provider] of Object.entries(providers)) {
+                const totalUsage = provider.keys.reduce((sum, k) => sum + (k.usage || 0), 0);
+                const totalBudget = provider.keys.reduce((sum, k) => sum + (k.budget || 100), 0);
+                const usagePercent = Math.round((totalUsage / totalBudget) * 100);
+                
+                html += `
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">${provider.name}</div>
+                            <span class="provider-badge badge-${provider.type}">${provider.type}</span>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>用量进度</span>
+                                <span>${usagePercent}%</span>
+                            </div>
+                            <div class="usage-bar">
+                                <div class="usage-fill" style="width: ${usagePercent}%"></div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">
+                            <div>密钥数量：${provider.keys.length}</div>
+                            <div>总用量：$${totalUsage} / $${totalBudget}</div>
+                            <div>告警阈值：${provider.alertThreshold}%</div>
+                        </div>
+                        ${usagePercent >= provider.alertThreshold ? `
+                            <div class="alert-banner alert-warning" style="margin-top: 1rem;">
+                                ⚠️ 用量已达${usagePercent}%，超过告警阈值
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            
+            usageGrid.innerHTML = html || '<div class="empty-state">暂无 Provider</div>';
+            logAction('usage.refresh', '刷新用量监控');
+        }
+
+        async function checkProviderUsage(providerId) {
+            refreshAllUsage();
+            switchTab('usage');
+        }
+
+        // ==================== 日志管理 ====================
+        function logAction(action, details) {
+            const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
+            logs.unshift({
+                timestamp: new Date().toISOString(),
+                action,
+                details
+            });
+            
+            // 保留最近 100 条日志
+            if (logs.length > 100) logs.length = 100;
+            
+            localStorage.setItem(LOGS_KEY, JSON.stringify(logs));
+            loadLogs();
+        }
+
+        function loadLogs() {
+            const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
+            const logList = document.getElementById('logList');
+            
+            if (logs.length === 0) {
+                logList.innerHTML = '<div class="empty-state">暂无操作日志</div>';
+                return;
+            }
+            
+            logList.innerHTML = logs.map(log => `
+                <div class="log-item">
+                    <div class="log-time">${new Date(log.timestamp).toLocaleString('zh-CN')}</div>
+                    <div class="log-action">${log.action}</div>
+                    <div style="flex: 1;">${log.details}</div>
+                </div>
+            `).join('');
+        }
+
+        function clearLogs() {
+            if (!confirm('确定要清空所有日志吗？')) return;
+            localStorage.removeItem(LOGS_KEY);
+            loadLogs();
+            logAction('logs.clear', '清空日志');
+        }
+
+        // ==================== 设置管理 ====================
+        function saveSettings() {
+            currentConfig.alerts = {
+                globalThreshold: parseInt(document.getElementById('globalThreshold').value),
+                enabled: document.getElementById('alertsEnabled').checked,
+                autoCheckInterval: parseInt(document.getElementById('autoCheckInterval').value),
+                autoCheckEnabled: document.getElementById('autoCheckEnabled').checked
+            };
+            
+            // 更新所有 Provider 的阈值
+            Object.values(currentConfig.providers).forEach(p => {
+                p.alertThreshold = currentConfig.alerts.globalThreshold;
+            });
+            
+            saveConfig();
+            showAlert('设置已保存', 'success');
+            logAction('settings.save', '保存告警设置');
+        }
+
+        // ==================== 导入导出 ====================
+        function exportConfig() {
+            const data = {
+                config: currentConfig,
+                exportedAt: new Date().toISOString(),
+                version: '2.0'
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `api-key-manager-export-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            logAction('config.export', '导出配置');
+            showAlert('配置已导出', 'success');
+        }
+
+        function importConfig(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (!data.config || !data.config.providers) {
+                        throw new Error('无效的配置文件');
+                    }
+                    
+                    if (!confirm('导入配置将覆盖当前配置，确定继续吗？')) return;
+                    
+                    currentConfig = data.config;
+                    saveConfig();
+                    renderProviders();
+                    updateStats();
+                    showAlert('配置已导入', 'success');
+                    logAction('config.import', '导入配置');
+                } catch (err) {
+                    showAlert('导入失败：' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // ==================== 工具函数 ====================
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function showAlert(message, type = 'info') {
+            const banner = document.getElementById('alertBanner');
+            banner.textContent = message;
+            banner.className = 'alert-banner alert-' + (type === 'error' ? 'error' : type === 'success' ? 'success' : 'warning');
+            banner.classList.remove('hidden');
+            
+            setTimeout(() => {
+                banner.classList.add('hidden');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
