@@ -46,9 +46,14 @@
         // 加载 API 配置
         async loadAPIConfig() {
             try {
+                console.log('🔍 开始加载 API 配置...');
+                
                 // 尝试从 OpenClaw 配置加载
                 if (typeof openClawConfig !== 'undefined') {
+                    console.log('✅ openClawConfig 对象存在');
+                    
                     const proxyConfig = await openClawConfig.getProxyConfig();
+                    console.log('📦 获取到的 proxyConfig:', proxyConfig);
                     
                     if (proxyConfig && proxyConfig.apiKey) {
                         this.apiConfig = {
@@ -64,12 +69,31 @@
                         console.log('🤖 模型:', this.apiConfig.model);
                         console.log('🔑 Key:', this.apiConfig.apiKey.substring(0, 15) + '...');
                         
+                        // 更新面板状态
+                        const statusText = document.getElementById('aiStatusText');
+                        if (statusText) {
+                            statusText.textContent = '在线 (' + this.apiConfig.model + ')';
+                        }
+                        
                         return true;
+                    } else {
+                        console.warn('⚠️ proxyConfig 或 apiKey 为空');
                     }
+                } else {
+                    console.warn('⚠️ openClawConfig 对象不存在');
                 }
                 
-                console.warn('⚠️ 未找到 OpenClaw 配置');
-                return false;
+                // 备用配置：直接硬编码（仅用于测试）
+                console.log('⚠️ 使用备用配置...');
+                this.apiConfig = {
+                    baseUrl: 'https://223.167.85.184:3000/v1',
+                    apiKey: 'sk-HlAhQoWHPvKeeHwGmKE2s1LPq7QautJBHURXgX47N7YQPWQg',
+                    model: 'glm-5-fp8'
+                };
+                console.log('📡 使用备用 API 配置');
+                console.log('🤖 模型:', this.apiConfig.model);
+                
+                return true;
                 
             } catch (error) {
                 console.error('❌ 加载 API 配置失败:', error);
@@ -219,7 +243,7 @@
     }
     
     // 全局函数
-    window.sendAIChat = function() {
+    window.sendAIChat = async function() {
         const input = document.getElementById('aiChatInput');
         const message = input.value.trim();
         if (!message) return;
@@ -239,20 +263,90 @@
         
         input.value = '';
         
-        // 显示 AI 回复（简化版）
-        setTimeout(() => {
+        // 显示"正在思考"
+        if (chatBox) {
+            chatBox.innerHTML += `
+                <div id="aiThinking" style="margin-top: 12px; padding: 10px 14px; background: #f0f0f0; border-radius: 12px; font-size: 13px; line-height: 1.5;">
+                    🤔 正在思考...
+                </div>
+            `;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        
+        // 调用 AI 模型
+        try {
+            const assistant = window.aiAssistantFixed;
+            if (!assistant || !assistant.apiConfig) {
+                throw new Error('API 配置未加载');
+            }
+            
+            const response = await fetch(`${assistant.apiConfig.baseUrl}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${assistant.apiConfig.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: assistant.apiConfig.model,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: '你是一个智能表单助手，帮助用户填写研发项目文档。回答要专业、准确、有帮助。'
+                        },
+                        {
+                            role: 'user',
+                            content: message
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 1000
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || `HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const answer = data.choices[0].message.content;
+            
+            // 移除"正在思考"，显示 AI 回答
+            const thinking = document.getElementById('aiThinking');
+            if (thinking) thinking.remove();
+            
             if (chatBox) {
                 chatBox.innerHTML += `
-                    <div style="margin-top: 12px; padding: 10px 14px; background: #f0f0f0; border-radius: 12px; font-size: 13px; line-height: 1.5;">
-                        收到你的问题："${message}"<br><br>
-                        ${window.aiAssistantFixed && window.aiAssistantFixed.apiConfig 
-                            ? '正在调用 AI 模型回答...' 
-                            : '⚠️ 请先配置 API 密钥以获得智能回答。'}
+                    <div style="margin-top: 12px; padding: 10px 14px; background: #e8f5e9; border-radius: 12px; font-size: 13px; line-height: 1.5;">
+                        <strong>🤖 AI 回答：</strong><br><br>
+                        ${answer.replace(/\n/g, '<br>')}
                     </div>
                 `;
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
-        }, 500);
+            
+            console.log('✅ AI 回答成功');
+            
+        } catch (error) {
+            console.error('❌ AI 调用失败:', error);
+            
+            // 移除"正在思考"，显示错误
+            const thinking = document.getElementById('aiThinking');
+            if (thinking) thinking.remove();
+            
+            if (chatBox) {
+                chatBox.innerHTML += `
+                    <div style="margin-top: 12px; padding: 10px 14px; background: #ffebee; border-radius: 12px; font-size: 13px; line-height: 1.5; color: #c62828;">
+                        ❌ AI 调用失败：${error.message}<br><br>
+                        请检查：<br>
+                        1. API 密钥是否有效<br>
+                        2. 网络连接是否正常<br>
+                        3. 模型名称是否正确
+                    </div>
+                `;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
     };
     
     window.showAIHelp = function() {
