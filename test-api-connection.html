@@ -178,7 +178,7 @@
             </div>
             <div class="form-group">
                 <label>API Key</label>
-                <input type="text" id="testApiKey" value="sk-0c4c0bf2da9f4f99982918067a69b3e5" placeholder="sk-...">
+                <input type="text" id="testApiKey" value="" placeholder="将从 OpenClaw 自动加载">
             </div>
             <div class="form-group">
                 <label>模型</label>
@@ -232,12 +232,19 @@
                                 document.getElementById('apiKey').textContent = 
                                     proxyConfig.apiKey.substring(0, 15) + '...';
                                 
+                                // 填充测试表单
+                                document.getElementById('testBaseUrl').value = proxyConfig.baseUrl;
+                                document.getElementById('testApiKey').value = proxyConfig.apiKey;
+                                
                                 if (proxyConfig.models && proxyConfig.models.length > 0) {
                                     document.getElementById('model').textContent = proxyConfig.models[0].id;
-                                    document.getElementById('testModel').value = proxyConfig.models[0].id;
+                                    // 优先使用 qwen 模型
+                                    const qwenModel = proxyConfig.models.find(m => m.id.includes('qwen'));
+                                    document.getElementById('testModel').value = qwenModel ? qwenModel.id : proxyConfig.models[0].id;
                                 }
                                 
                                 console.log('✅ OpenClaw 配置已加载');
+                                console.log('🔑 API Key 已自动填充');
                                 return;
                             }
                         }

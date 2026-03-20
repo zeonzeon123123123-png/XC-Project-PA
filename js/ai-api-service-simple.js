@@ -33,22 +33,44 @@ class AIAPIService {
                     this.config.baseUrl = proxyConfig.baseUrl;
                     this.config.apiKey = proxyConfig.apiKey;
                     
-                    // 使用代理平台的模型
+                    // 使用代理平台的模型（优先使用 qwen-plus）
                     if (proxyConfig.models && proxyConfig.models.length > 0) {
-                        this.config.model = proxyConfig.models[0].id;
+                        // 查找 qwen 相关模型
+                        const qwenModel = proxyConfig.models.find(m => m.id.includes('qwen'));
+                        this.config.model = qwenModel ? qwenModel.id : proxyConfig.models[0].id;
+                    } else {
+                        // 默认使用 qwen-plus
+                        this.config.model = 'qwen-plus';
                     }
                     
                     this.initialized = true;
                     console.log('✅ AI API Service 已初始化');
                     console.log(`📡 API: ${this.config.baseUrl}`);
                     console.log(`🤖 模型：${this.config.model}`);
-                    console.log(`🔑 Key: ${this.config.apiKey.substring(0, 10)}...`);
+                    console.log(`🔑 Key: ${this.config.apiKey.substring(0, 15)}...`);
                     
                     return true;
                 }
             }
             
-            console.warn('⚠️ 未找到 OpenClaw 配置');
+            console.warn('⚠️ 未找到 OpenClaw 配置，尝试使用备用配置');
+            
+            // 备用配置：直接使用 OpenClaw 中的 glm 配置
+            const glmConfig = await openClawConfig.getGLMConfig();
+            if (glmConfig && glmConfig.apiKey) {
+                this.config.baseUrl = glmConfig.baseUrl;
+                this.config.apiKey = glmConfig.apiKey;
+                this.config.model = 'glm-4-flash';
+                
+                this.initialized = true;
+                console.log('✅ AI API Service 已初始化（使用 GLM 配置）');
+                console.log(`📡 API: ${this.config.baseUrl}`);
+                console.log(`🤖 模型：${this.config.model}`);
+                
+                return true;
+            }
+            
+            console.error('❌ 未找到任何有效的 API 配置');
             return false;
             
         } catch (error) {
