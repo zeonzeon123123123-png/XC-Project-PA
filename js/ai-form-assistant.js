@@ -1465,46 +1465,63 @@ let aiAssistant;
 let aiAPIService;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. 初始化 API 服务（如果可用）
+    console.log('🚀 正在初始化 AI 助手...');
+    
+    // 1. 加载 OpenClaw 配置
     try {
-        if (typeof AIAPIService !== 'undefined') {
-            // 尝试从配置加载 API 密钥
-            const config = await loadAPIConfig();
-            aiAPIService = new AIAPIService(config);
-            console.log('✅ AI API Service 已初始化');
+        if (typeof OpenClawConfigLoader !== 'undefined') {
+            await openClawConfig.load();
+            const modelInfo = await openClawConfig.getCurrentModel();
+            if (modelInfo) {
+                console.log('✅ OpenClaw 配置已加载');
+                console.log(`🤖 当前模型：${modelInfo.fullName || modelInfo.model}`);
+            }
         }
     } catch (e) {
-        console.warn('⚠️ AI API Service 初始化失败:', e);
+        console.warn('⚠️ OpenClaw 配置加载失败:', e);
     }
     
-    // 2. 初始化表单助手
+    // 2. 初始化 API 服务（简化版，自动读取 OpenClaw 配置）
+    try {
+        if (typeof AIAPIService !== 'undefined') {
+            aiAPIService = new AIAPIService();
+            const success = await aiAPIService.init();
+            
+            if (success) {
+                const status = aiAPIService.getStatus();
+                console.log('✅ AI API Service 已连接');
+                console.log(`📡 模型：${status.model}`);
+                
+                // 更新 UI 显示模型状态
+                updateAIStatus(status);
+            } else {
+                console.warn('⚠️ AI API Service 未配置');
+            }
+        }
+    } catch (e) {
+        console.error('❌ AI API Service 初始化失败:', e);
+    }
+    
+    // 3. 初始化表单助手
     aiAssistant = new AIFormAssistant({
-        enableWebSearch: true,
+        enableWebSearch: false,
         apiService: aiAPIService
     });
     
-    console.log('✅ AI Form Assistant 已初始化');
+    console.log('✅ AI Form Assistant 已就绪');
 });
 
-// 加载 API 配置
-async function loadAPIConfig() {
-    try {
-        // 尝试从配置文件加载
-        const response = await fetch('./api-config.json');
-        if (response.ok) {
-            return await response.json();
+// 更新 AI 状态显示
+function updateAIStatus(status) {
+    // 查找状态显示元素并更新
+    const statusElements = document.querySelectorAll('.ai-status-text, .status-text');
+    statusElements.forEach(el => {
+        if (status.initialized && status.model) {
+            el.textContent = `在线 (${status.model})`;
+            el.style.color = '#22c55e';
         }
-    } catch (e) {
-        console.warn('⚠️ 未找到 API 配置文件，使用默认配置');
-    }
+    });
     
-    // 返回默认配置
-    return {
-        model: 'qwen-plus',
-        baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-        webSearch: {
-            enabled: true,
-            provider: 'brave'
-        }
-    };
+    // 在控制台显示
+    console.log(`🟢 AI 助手已就绪 - 模型：${status.model}`);
 }
