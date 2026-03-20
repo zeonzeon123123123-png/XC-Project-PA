@@ -1139,13 +1139,78 @@ class AIFormAssistant {
         }
     }
     
-    // 生成回答
+    // 生成回答（调用真实 API）
     async generateAnswer(question) {
+        // 收集上下文信息
+        const context = {
+            formData: this.getCurrentFormData(),
+            historyData: this.historyData,
+            needsWebSearch: this.shouldSearchWeb(question)
+        };
+        
+        // 检查是否配置了 API 服务
+        if (typeof aiAPIService !== 'undefined' && aiAPIService) {
+            try {
+                // 调用 AI API 服务
+                const results = await aiAPIService.comprehensiveSearch(question, context);
+                
+                if (results.success || results.answer) {
+                    return this.formatAIAnswer(results);
+                }
+            } catch (e) {
+                console.error('AI API 调用失败:', e);
+            }
+        }
+        
+        // 如果 API 调用失败或未配置，降级到本地回答
+        return this.generateLocalAnswer(question, context);
+    }
+    
+    // 格式化 AI 回答
+    formatAIAnswer(results) {
+        let answer = '';
+        
+        // 添加历史项目参考
+        if (results.history && results.history.length > 0) {
+            answer += '📚 历史项目参考：\n\n';
+            results.history.forEach((project, i) => {
+                answer += `${i + 1}. **${project.name}** (${project.id})\n`;
+                if (project.budget) {
+                    answer += `   预算：${project.budget / 10000}万元 | 周期：${project.duration}个月\n`;
+                }
+                const relevantInfo = this.extractRelevantInfo(project, '');
+                if (relevantInfo) {
+                    answer += `   ${relevantInfo}\n`;
+                }
+                answer += '\n';
+            });
+        }
+        
+        // 添加 AI 生成的回答
+        if (results.answer) {
+            answer += '\n🤖 AI 回答：\n\n';
+            answer += results.answer;
+        }
+        
+        // 添加联网搜索结果
+        if (results.web && results.web.length > 0) {
+            answer += '\n\n🔍 联网搜索结果：\n\n';
+            results.web.forEach((result, i) => {
+                answer += `${i + 1}. [${result.title}](${result.url})\n`;
+                if (result.description) {
+                    answer += `   ${result.description}\n`;
+                }
+                answer += '\n';
+            });
+        }
+        
+        return answer || '抱歉，未能获取到有效信息。';
+    }
+    
+    // 本地回答（降级方案）
+    generateLocalAnswer(question, context) {
         // 1. 检索历史项目
         const historyResults = this.searchHistory(question);
-        
-        // 2. 判断是否需要联网搜索
-        const needsWebSearch = this.shouldSearchWeb(question);
         
         let answer = '';
         
@@ -1161,13 +1226,13 @@ class AIFormAssistant {
             });
         }
         
-        // 添加联网搜索回答
-        if (needsWebSearch) {
-            answer += '\n🔍 联网搜索建议：\n';
-            answer += '我可以帮你搜索以下相关信息：\n';
+        // 如果需要联网搜索但没有 API
+        if (context.needsWebSearch) {
+            answer += '\n\n🔍 建议联网搜索：\n';
+            answer += '以下问题可以通过联网搜索获取最新信息：\n';
             answer += `• "${question}" 的行业最佳实践\n`;
             answer += `• "${question}" 的最新技术标准\n\n`;
-            answer += '（实际使用时会调用 web_search API 获取实时信息）';
+            answer += '⚠️ 请配置 API 密钥以启用联网搜索功能。';
         }
         
         // 如果没有找到相关信息
@@ -1395,10 +1460,51 @@ class AIFormAssistant {
     }
 }
 
-// 初始化 AI 助手
+// 初始化 AI 助手和 API 服务
 let aiAssistant;
-document.addEventListener('DOMContentLoaded', () => {
+let aiAPIService;
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. 初始化 API 服务（如果可用）
+    try {
+        if (typeof AIAPIService !== 'undefined') {
+            // 尝试从配置加载 API 密钥
+            const config = await loadAPIConfig();
+            aiAPIService = new AIAPIService(config);
+            console.log('✅ AI API Service 已初始化');
+        }
+    } catch (e) {
+        console.warn('⚠️ AI API Service 初始化失败:', e);
+    }
+    
+    // 2. 初始化表单助手
     aiAssistant = new AIFormAssistant({
-        enableWebSearch: true
+        enableWebSearch: true,
+        apiService: aiAPIService
     });
+    
+    console.log('✅ AI Form Assistant 已初始化');
 });
+
+// 加载 API 配置
+async function loadAPIConfig() {
+    try {
+        // 尝试从配置文件加载
+        const response = await fetch('./api-config.json');
+        if (response.ok) {
+            return await response.json();
+        }
+    } catch (e) {
+        console.warn('⚠️ 未找到 API 配置文件，使用默认配置');
+    }
+    
+    // 返回默认配置
+    return {
+        model: 'qwen-plus',
+        baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        webSearch: {
+            enabled: true,
+            provider: 'brave'
+        }
+    };
+}

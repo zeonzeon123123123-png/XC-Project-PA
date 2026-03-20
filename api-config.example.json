@@ -1,0 +1,25 @@
+{
+  "_comment": "API 配置文件示例 - 复制为 api-config.json 并填入你的 API 密钥",
+  
+  "model": "qwen-plus",
+  "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  "apiKey": "YOUR_QWEN_API_KEY_HERE",
+  
+  "webSearch": {
+    "enabled": true,
+    "provider": "brave",
+    "apiKey": "YOUR_BRAVE_SEARCH_API_KEY_HERE",
+    "googleCX": ""
+  },
+  
+  "_notes": {
+    "model": "支持的模型：qwen-plus, qwen-max, glm-4, gpt-4 等",
+    "baseUrl": "根据选择的模型提供商填写对应的 API 地址",
+    "webSearch": {
+      "provider": "支持的搜索引擎：brave, bing, google",
+      "braveApiKey": "https://brave.com/search/api/ 获取",
+      "bingApiKey": "https://www.microsoft.com/en-us/bing/apis/bing-web-search-api 获取",
+      "googleCX": "https://cse.google.com/cse/ 获取 Custom Search Engine ID"
+    }
+  }
+}
